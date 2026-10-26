@@ -49,6 +49,14 @@
   .screen .lbl { color: #8c8c86; font-family: "Silkscreen", monospace; font-size: 11px; letter-spacing: .08em; margin-top: 10px; display: flex; justify-content: space-between; }
   .screen .led { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #c33; margin-right: 6px; vertical-align: 1px; box-shadow: 0 0 6px #f44; }
 
+  /* looking for the plugin? */
+  .plugin { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; background: var(--paper); border: 3px solid var(--ink);
+            padding: 14px 18px; margin: 4px 0 8px; font-size: 14px; }
+  .plugin b { font-family: "Silkscreen", monospace; font-weight: 400; letter-spacing: .04em; }
+  .plugin .grow { flex: 1; min-width: 200px; }
+  .plugin a.go { font-family: "Silkscreen", monospace; font-size: 13px; white-space: nowrap; }
+  .video { position: relative; aspect-ratio: 16 / 9; border: 3px solid var(--ink); box-shadow: 6px 6px 0 var(--shadow); background: #000; max-width: 820px; }
+  .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
   section { padding: 34px 0 6px; border-top: 3px solid var(--ink); margin-top: 26px; }
   h2 { font-size: 22px; margin: 0 0 16px; }
   .story { max-width: 720px; font-size: 16px; }
@@ -99,9 +107,20 @@
     </div>
   </div>
 
+  <div class="plugin">
+    <span class="grow"><b data-t="plugT"></b> <span data-t="plug"></span></span>
+    <a class="go" id="plugLink" href="https://amorph.audio/patches/modular-town-v3/" target="_blank" rel="noopener" data-t="plugGo"></a>
+  </div>
+
   <section>
     <h2 class="px" data-t="storyTitle"></h2>
     <div class="story"><p data-t="story1"></p><p data-t="story2"></p></div>
+  </section>
+
+  <section>
+    <h2 class="px" data-t="videoTitle"></h2>
+    <div class="video"><iframe src="https://www.youtube-nocookie.com/embed/uFcVOXPicuw" title="Le FM-1 pour de la musique de film" loading="lazy"
+      allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
   </section>
 
   <section>
@@ -148,6 +167,8 @@ const TEXT = {
     install: "Installer", carnet: "Ouvrir le Carnet",
     free: "Gratuit et libre (GPL-3.0). Version bêta. Chrome ou Edge sur ordinateur.",
     altTown: "Modular Town, du matin à la nuit, sur l'écran du FM-1",
+    plugT: "Tu cherches le plugin Modular Town ?", plug: "Le synthé-ville pour ton ordinateur est un patch gratuit pour Amorph, le plugin d'Artists in DSP. Modular One, c'est son petit frère sur le FM-1.",
+    plugGo: "Modular Town →", videoTitle: "En vidéo",
     storyTitle: "Un banc, un synthé, une ville",
     story1: "Dans le plugin Modular Town, on regarde un monde vivre à travers l'interface. Modular One fait l'inverse : on s'installe sur un banc avec le FM-1, on joue, et la ville en face réagit. L'heure, la lumière et l'eau suivent le son.",
     story2: "Tout est pensé pour écrire, pas pour programmer : une seule interface, les quatre verts des consoles portables d'époque, des sons prêts à l'emploi, et un carnet qui n'oublie rien.",
@@ -179,6 +200,8 @@ const TEXT = {
     install: "Install", carnet: "Open the Carnet",
     free: "Free and open source (GPL-3.0). Beta. Chrome or Edge on a computer.",
     altTown: "Modular Town, from morning to night, on the FM-1's screen",
+    plugT: "Looking for the Modular Town plugin?", plug: "The town-synth for your computer is a free patch for Amorph, the plugin by Artists in DSP. Modular One is its little brother on the FM-1.",
+    plugGo: "Modular Town →", videoTitle: "On video (French, English subtitles)",
     storyTitle: "A bench, a synth, a town",
     story1: "In the Modular Town plugin, you watch a world live through the interface. Modular One turns it around: you sit on a bench with the FM-1, you play, and the town across the water answers. The hour, the light and the water follow the sound.",
     story2: "Everything is made for writing, not for programming: one interface, the four greens of the old handheld consoles, sounds ready to use, and a sketchbook that forgets nothing.",
