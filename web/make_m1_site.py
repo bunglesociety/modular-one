@@ -3,7 +3,7 @@
 # Copyright (C) 2026 Alexis Arakis (Bungle Society)
 """Make the Modular One site (GitHub Pages, or any https host):
 
-  index.html                       home.html: what it is, links to the three below
+  index.html                       home.html: the Modular One page (img/: the screens, the town's day)
   install/index.html               install.html with fm1pkg.js, fm1ota.js and the metadata inlined
   carnet/index.html                carnet.html: songs and sketches, MIDI in and out
   firmware/modular-one-VER.fwsc    the package
@@ -52,6 +52,9 @@ def main(pkg, version, out):
     (inst / "index.html").write_text(html, encoding="utf-8")
     shutil.copy(HERE / "carnet.html", car / "index.html")
     shutil.copy(HERE / "home.html", out / "index.html")
+    (out / "img").mkdir(exist_ok=True)
+    for f in sorted((HERE / "img").glob("*")):
+        shutil.copy(f, out / "img" / f.name)
     (out / ".nojekyll").write_text("", encoding="utf-8")
     print(f"site: {out}: index.html, install/ ({len(html)} B), carnet/, firmware/{name} ({len(raw)} B, {product})")
 
