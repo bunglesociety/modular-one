@@ -1,13 +1,22 @@
 /* SPDX-License-Identifier: GPL-3.0-only
  * Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments */
-/* Modular One menu (HOME held): LOW CUT, SCREEN SAVER (the town after a minute; the old ZOOM setting,
- * 0 = on), CALIBRATION, ABOUT. One screen only (the handheld green): no theme to choose. */
-enum { MI_LOWCUT, MI_ZOOM, MI_PANEL, MI_ABOUT, MI_BACK, MI_COUNT };
-static const char *const MI_NAME[MI_COUNT] = {"LOW CUT", "SCREEN SAVER", "CALIBRATION", "ABOUT", "BACK"};
+/* Modular One menu (HOME held): BOLD TEXT (the small letters drawn bold), LOW CUT, SCREEN SAVER (the
+ * town after a minute; the old ZOOM setting, 0 = on), CALIBRATION, ABOUT. One screen only (the handheld
+ * green): no theme to choose. BOLD lives in settings.palette (ui_draw.c m1_theme_apply). */
+enum { MI_BOLD, MI_LOWCUT, MI_ZOOM, MI_PANEL, MI_ABOUT, MI_BACK, MI_COUNT };
+static const char *const MI_NAME[MI_COUNT] = {"BOLD TEXT", "LOW CUT", "SCREEN SAVER", "CALIBRATION", "ABOUT", "BACK"};
+
+static void bold_set(uint32_t bold)
+{
+    settings.palette = 0x100u | (bold ? 0x200u : 0u);
+    m1_theme_apply(0);
+    ui.force = 1;
+}
 
 static void draw_menu(void)
 {
-    uint32_t i, pass, sig = ui.menu * 7u + ui.menu_sel * 131u + settings.lowcut * 7919u + settings.zoom * 104729u;
+    uint32_t i, pass, sig = ui.menu * 7u + ui.menu_sel * 131u + settings.lowcut * 7919u + settings.zoom * 104729u +
+                            settings.palette * 31u + m1_bold * 17u;
     if (!ui.force && sig == ui.menu_sig)
         return;
     ui.menu_sig = sig;
@@ -33,7 +42,7 @@ static void draw_menu(void)
             cv_rect(0, 0, 240, 26, M_TEXT);
             m1_text(12, 5, FN_NAME, "MENU", M_BG);
             for (i = 0; i < MI_COUNT; i++) {
-                int32_t y = 40 + (int32_t)i * 30;
+                int32_t y = 36 + (int32_t)i * 28;
                 int sel = i == ui.menu_sel;
                 if (sel) {                              /* the cursor of the old games: a solid arrow */
                     int32_t k;
@@ -41,8 +50,8 @@ static void draw_menu(void)
                         cv_rect(6 + k * 2, y + 1 + k * 2, 2, 18 - k * 4, M_TEXT);
                 }
                 m1_text(22, y, FN_MID, MI_NAME[i], sel ? M_TEXT : M_DIM);
-                if (i == MI_LOWCUT || i == MI_ZOOM) {
-                    int on = i == MI_LOWCUT ? settings.lowcut != 0 : settings.zoom == 0;
+                if (i == MI_LOWCUT || i == MI_ZOOM || i == MI_BOLD) {
+                    int on = i == MI_LOWCUT ? settings.lowcut != 0 : i == MI_BOLD ? m1_bold != 0 : settings.zoom == 0;
                     m1_rrect(192, y + 2, 40, 14, 0, on ? M_TEXT : M_PANEL);
                     m1_text_c(212, y + 5, FN_LAB, on ? "ON" : "OFF", on ? M_BG : M_DIM);
                 }
@@ -85,6 +94,11 @@ static void menu_input(uint32_t pressed)
     if ((s = panel_enc(EN_PRESET)) != 0 && ui.menu == 1)
         ui.menu_sel = (uint8_t)((ui.menu_sel + (s > 0 ? 1u : MI_COUNT - 1u)) % MI_COUNT);
     s = panel_enc(EN_K1);
+    if ((s != 0 || ok) && ui.menu == 1 && ui.menu_sel == MI_BOLD) {       /* right = ON, left = OFF; OCT+ toggles */
+        bold_set(s > 0 ? 1u : s < 0 ? 0u : !m1_bold);
+        s = 0;
+        ok = 0;
+    }
     if ((s != 0 || ok) && ui.menu == 1 && (ui.menu_sel == MI_LOWCUT || ui.menu_sel == MI_ZOOM)) {
         /* KNOB 1: right = ON, left = OFF; OCT+ toggles */
         uint32_t *v = ui.menu_sel == MI_LOWCUT ? &settings.lowcut : &settings.zoom;

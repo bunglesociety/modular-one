@@ -23,7 +23,7 @@ static uint32_t str_hash(uint32_t h, const char *s);
 #define M_GREY UIC[4]
 #define M_TEXT UIC[5]
 #define M_REC UIC[5]
-static const uint16_t FAMC[2] = {GB3, GB2};      /* the families: SOUFFLES, KEYS */
+static const uint16_t FAMC[5] = {GB3, GB2, GB3, GB2, GB3};   /* the families: SOUFFLES, KEYS, LUMIERES, OMBRES, NEON */
 
 #define Y_MAIN 20
 #define H_BAND 85
@@ -106,8 +106,11 @@ static int32_t m1_text(int32_t x, int32_t y, const felucca_font_t *f, const char
                 for (gx = 0; gx < w; gx++) {
                     uint32_t v = gd[gy * bpr + gx / 2u];
                     v = (gx & 1u) ? (v & 15u) : (v >> 4);
-                    if (v)
+                    if (v) {
                         m1_blend(x - f->pad + (int32_t)gx, y + (int32_t)gy, c, v + (v >> 3));
+                        if (m1_bold && f == &FONT_LAB)              /* bold: the stroke two pixels wide */
+                            m1_blend(x - f->pad + (int32_t)gx + 1, y + (int32_t)gy, c, v + (v >> 3));
+                    }
                 }
         x += f->adv[gi];
     }
@@ -323,9 +326,15 @@ static int32_t batt_shown(void)                           /* charging (USB host)
     return batt_level();
 }
 
-/* one screen: the theme is fixed (gfx.c); kept as the hook that sets the legacy MONO steps */
+/* one screen, the handheld green (gfx.c); the bold letters (menu): settings.palette 0x100 set = chosen,
+ * 0x200 = bold (older values: bold); the legacy MONO steps */
 static void m1_theme_apply(int force)
 {
+    uint8_t bold = (uint8_t)(settings.palette & 0x100u ? (settings.palette & 0x200u) != 0 : 1);
+    if (bold != m1_bold) {
+        m1_bold = bold;
+        force = 1;
+    }
     if (force || !m1.theme) {
         m1.theme = 1;
         palette_set(0);
@@ -1144,10 +1153,10 @@ static void pg_presets(void)
         int32_t cw = 232 / MT_NFAM, x = 4 + (int32_t)i * cw;
         if (!user && i == fam) {
             m1_rrect(x, 25, cw - 3, 13, 3, FAMC[i]);
-            m1_text_c(x + (cw - 3) / 2, 28, FN_LAB, MT_FAM[i], M_BG);
+            m1_text_c(x + (cw - 3) / 2, 28, FN_LAB, MT_FAM3[i], M_BG);
         } else {
             m1_rrect_o(x, 25, cw - 3, 13, 3, m1_mix(M_BG, FAMC[i], 9u));
-            m1_text_c(x + (cw - 3) / 2, 28, FN_LAB, MT_FAM[i], m1_mix(M_BG, FAMC[i], 13u));
+            m1_text_c(x + (cw - 3) / 2, 28, FN_LAB, MT_FAM3[i], m1_mix(M_BG, FAMC[i], 13u));
         }
     }
     if (user) {
@@ -1508,6 +1517,148 @@ static void ui_tick(void)
         ui.hot_t--;
 }
 
+/* ------------------------------------------------------------ the player --- */
+/* While the player runs (seq.c): a tape recorder seen from above, nothing else. Two open reels
+ * turn, the tape goes from the left one to the right one as the piece goes, down around two
+ * rollers and under the head. Below: the piece's name, the sound, the time. KNOB 1 pops the list
+ * up over the bottom half (ui_input.c: the choice plays when the knob rests, the list goes 5 s
+ * later). Two strips drawn from the same scene: the reels at ~15 frames/s, the bottom when it
+ * changes. */
+#define PL_RY 74                                                    /* the reels' centres */
+#define PL_RL 64
+#define PL_RR 176
+#define PL_R 50                                                     /* their flanges */
+#define PL_GY 148                                                   /* the rollers */
+#define PL_GL 20
+#define PL_GR 220
+#define PL_LIST_MS 5000u                                            /* the list stays up 5 s after the knob */
+
+static void pl_time(char *b, uint32_t d10)
+{
+    uint32_t s = d10 / 100u, k = 0;
+    if (s >= 600u)
+        b[k++] = (char)('0' + s / 600u % 10u);
+    b[k++] = (char)('0' + s / 60u % 10u);
+    b[k++] = ':';
+    b[k++] = (char)('0' + s % 60u / 10u);
+    b[k++] = (char)('0' + s % 10u);
+    b[k] = 0;
+}
+
+static void pl_reel(int32_t cx, int32_t cy, int32_t tape, uint32_t ang)
+{
+    uint32_t k;
+    m1_disc(cx, cy, PL_R, M_TEXT);                                 /* the flange */
+    m1_disc(cx, cy, PL_R - 2, M_BG);
+    m1_disc(cx, cy, tape, M_DIM);                                  /* the tape wound on it */
+    for (k = 0; k < 3u; k++) {                                     /* its three spokes, turning */
+        uint32_t a = ang + k * 0x55555555u;
+        int32_t c0 = sine_i(a + 0x40000000u), s0 = sine_i(a);
+        int32_t x0 = cx + c0 * 11 / 32768, y0 = cy + s0 * 11 / 32768;
+        int32_t x1 = cx + c0 * (PL_R - 3) / 32768, y1 = cy + s0 * (PL_R - 3) / 32768;
+        cv_line(x0, y0, x1, y1, M_TEXT);
+        cv_line(x0 + 1, y0, x1 + 1, y1, M_TEXT);
+    }
+    m1_disc(cx, cy, 11, M_PANEL);                                  /* the hub */
+    m1_ring(cx, cy, 11, M_TEXT);
+    m1_disc(cx, cy, 2, M_TEXT);
+}
+
+/* the whole deck in screen coordinates; the strip being drawn clips it (cv_oy) */
+static void pl_deck(uint32_t p1000, uint32_t ang)
+{
+    int32_t lt = 16 + (int32_t)((1000u - p1000) * 30u / 1000u), rt = 16 + (int32_t)(p1000 * 30u / 1000u);
+    cv_line(PL_RL - lt, PL_RY, PL_GL - 6, PL_GY, M_TEXT);          /* the tape: down to the left roller, */
+    cv_line(PL_GL, PL_GY + 6, PL_GR, PL_GY + 6, M_TEXT);           /* across under the head, */
+    cv_line(PL_RR + rt, PL_RY, PL_GR + 6, PL_GY, M_TEXT);          /* up to the right reel */
+    m1_disc(PL_GL, PL_GY, 6, M_PANEL);                             /* the rollers */
+    m1_ring(PL_GL, PL_GY, 6, M_TEXT);
+    m1_disc(PL_GL, PL_GY, 1, M_TEXT);
+    m1_disc(PL_GR, PL_GY, 6, M_PANEL);
+    m1_ring(PL_GR, PL_GY, 6, M_TEXT);
+    m1_disc(PL_GR, PL_GY, 1, M_TEXT);
+    cv_rect(108, PL_GY - 2, 24, 8, M_TEXT);                        /* the head, its two guides */
+    cv_rect(86, PL_GY + 1, 6, 5, M_DIM);
+    cv_rect(148, PL_GY + 1, 6, 5, M_DIM);
+    pl_reel(PL_RL, PL_RY, lt, ang);
+    pl_reel(PL_RR, PL_RY, rt, ang + 0x2AAAAAAAu);
+}
+
+static void m1_player_draw(int force)
+{
+    static uint32_t last_frame, low_sig;
+    const pl_item_t *it = &pl_item[pl_idx % PL_MAX];
+    uint32_t el = demo_pos / 441u, dur = it->dur10, p1000 = dur ? (el >= dur ? 1000u : el * 1000u / dur) : 0u;
+    uint32_t ang = demo_pos * 1715u, sig;                          /* a turn every ~2.5 s */
+    int list = pl_list_ms && fm1_ms - pl_list_ms < PL_LIST_MS;
+    char b[24], c[16];
+    if (force || ui.frame - last_frame >= 4u) {                     /* the reels */
+        last_frame = ui.frame;
+        m1_begin(240, 124, 0, 0);
+        pl_deck(p1000, ang);
+        if (ui.msg_t)
+            m1_text(6, 3, FN_SM, ui.msg, M_TEXT);
+        fmt_int(b, (int32_t)pl_idx + 1);
+        str_cpy(b + str_len(b), " / ", 4);
+        fmt_int(c, (int32_t)pl_count);
+        str_cpy(b + str_len(b), c, 8);
+        m1_text_r(234, 3, FN_LAB, b, M_GREY);
+        cv_blit(0, 0);
+    }
+    sig = pl_idx * 7u + pl_cursor * 131u + pl_count * 977u + el / 100u * 13u + TSEL->preset * 31u +
+          (uint32_t)TSEL->eng_req * 5u + (uint32_t)list * 7919u + p1000 / 30u * 101u + pl_del * 65537u;
+    if (!force && sig == low_sig)
+        return;
+    low_sig = sig;
+    m1_begin(240, 116, 0, 124);
+    cv_oy = -124;
+    if (!list) {                                                   /* the rollers, the name, the time */
+        pl_deck(p1000, ang);
+        m1_text(8, 166, FN_NAME, it->name, M_TEXT);
+        str_cpy(c, ENGINES[TSEL->eng_req]->presets[TSEL->preset % ENGINES[TSEL->eng_req]->npresets].name, sizeof c);
+        m1_text_r(232, 196, FN_LAB, c, M_GREY);
+        pl_time(b, el);
+        str_cpy(b + str_len(b), " / ", 4);
+        pl_time(c, dur);
+        str_cpy(b + str_len(b), c, 8);
+        m1_text(8, 196, FN_LAB, b, M_TEXT);
+        cv_rect(8, 212, 224, 2, M_DIM);                            /* where the piece is */
+        cv_rect(8, 212, (int32_t)(224u * p1000 / 1000u), 2, M_TEXT);
+        m1_text_c(120, 224, FN_LAB, "K1 LIST  OCT+ NEXT  OCT- START", M_GREY);
+    } else {                                                       /* the list, popped up */
+        int32_t first = clamp((int32_t)pl_cursor - 2, 0, pl_count > 6u ? (int32_t)pl_count - 6 : 0), row;
+        pl_deck(p1000, ang);
+        cv_rect(4, 128, 232, 108, M_BG);
+        cv_rect(4, 128, 232, 1, M_TEXT);
+        cv_rect(4, 235, 232, 1, M_TEXT);
+        cv_rect(4, 128, 1, 108, M_TEXT);
+        cv_rect(235, 128, 1, 108, M_TEXT);
+        for (row = 0; row < 6 && first + row < (int32_t)pl_count; row++) {
+            uint32_t k = (uint32_t)(first + row);
+            int32_t y = 133 + row * 17;
+            int sel = k == pl_cursor, playing = k == pl_idx;
+            if (pl_del == k + 1u) {                                /* "erase?" */
+                cv_rect(5, y - 3, 230, 16, M_TEXT);
+                str_cpy(b, "ERASE ", 8);
+                str_cpy(b + 6, pl_item[k].name, sizeof b - 6u);
+                m1_text(12, y, FN_LAB, b, M_BG);
+                m1_text_r(228, y, FN_LAB, "HOLD REC", M_BG);
+                continue;
+            }
+            if (sel)
+                cv_rect(5, y - 3, 230, 16, M_PANEL);
+            fmt_int(b, (int32_t)k + 1);
+            m1_text(10, y, FN_LAB, playing ? ">" : " ", M_TEXT);
+            m1_text(22, y, FN_LAB, b, sel || playing ? M_TEXT : M_GREY);
+            m1_text(44, y, FN_LAB, pl_item[k].name, sel || playing ? M_TEXT : M_GREY);
+            pl_time(c, pl_item[k].dur10);
+            m1_text_r(230, y, FN_LAB, c, M_GREY);
+        }
+    }
+    cv_oy = 0;
+    cv_blit(0, 124);
+}
+
 static void ui_draw(void)
 {
     ui.frame++;
@@ -1552,8 +1703,25 @@ static void ui_draw(void)
         }
         return;
     }
-    if (!SAVER_OFF && TSEL->eng_req == MT_ENGINE &&
-        fm1_ms - m1.touch_ms > (demo_on ? 3000u : SAVER_MS)) {      /* the window on the town (the demo: at once) */
+    {                                                               /* the player: the cassette */
+        static uint8_t was;
+        if (demo_on) {
+            if (m1.saver) {
+                m1.saver = 0;
+                city_leave();
+            }
+            m1_player_draw(!was || ui.force);
+            was = 1;
+            ui.force = 0;
+            ui_tick();
+            return;
+        }
+        if (was) {
+            was = 0;
+            ui.force = 1;
+        }
+    }
+    if (!SAVER_OFF && TSEL->eng_req == MT_ENGINE && fm1_ms - m1.touch_ms > SAVER_MS) {   /* the window on the town */
         if (!m1.saver)
             city_leave();                                           /* (a fresh full picture) */
         m1.saver = 1;

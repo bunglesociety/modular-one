@@ -17,6 +17,10 @@ enum { ED_INFO = 1, ED_GET, ED_SET, ED_DUMP, ED_DESC, ED_STEP_GET, ED_STEP_SET, 
        ED_WATCH, ED_CHANGED, ED_RELOAD, ED_PING, ED_STEP_CHANGED,              /* v2: live sync */
        ED_TRACK, ED_TRACK_MIX, ED_TRACK_DUMP, ED_TRACK_STEP,                    /* v3: tracks */
        ED_TRACK_PARAM, ED_TRACK_CHANGED };                                      /* v4: any track's parameters */
+enum { ED_SONG_BEGIN = 40, ED_SONG_WRITE, ED_SONG_END, ED_SONG_INFO,              /* Modular One: songs, */
+       ED_SK_INFO, ED_SK_READ, ED_SK_CLEAR,                                     /* sketches (m1_book.c), */
+       ED_SONG_READ, ED_SK_ERASE, ED_SK_RENAME };                               /* 0.2: the app (web/carnet.html) */
+#define ED_SMP_EDIT 1u                     /* sample slots the editor may write: 2 and 3 hold the sketches, the songs */
 
 static uint8_t ed_out[600];
 static uint32_t ed_n;
@@ -383,14 +387,14 @@ static void ed_handle(const uint8_t *f, uint32_t n)   /* f: the bytes between F0
         break;
     case ED_SMP_BEGIN:                                     /* slot -> slot, rc */
     case ED_SMP_ERASE:
-        if (na < 1u || a[0] >= SMP_USER_SLOTS || !flash_ok)
+        if (na < 1u || a[0] >= ED_SMP_EDIT || !flash_ok)
             return;
         ed_b(a[0]);
         ed_b(ed_smp_erase(a[0], cmd == ED_SMP_ERASE) ? 1u : 0u);
         break;
     case ED_SMP_WRITE: {                                   /* slot, off (3 x 7 bit), pack7 data -> slot, off, rc */
         uint32_t off, len, rc = 0, took;
-        if (na < 5u || a[0] >= SMP_USER_SLOTS || !flash_ok)
+        if (na < 5u || a[0] >= ED_SMP_EDIT || !flash_ok)
             return;
         off = (uint32_t)a[1] | (uint32_t)a[2] << 7 | (uint32_t)a[3] << 14;
         len = ed_unpack7(a + 4, na - 4u, ed_smp_buf, 256u);
@@ -414,7 +418,7 @@ static void ed_handle(const uint8_t *f, uint32_t n)   /* f: the bytes between F0
         break;
     }
     case ED_SMP_END:                                       /* slot, pack7 header -> slot, rc */
-        if (na < 2u || a[0] >= SMP_USER_SLOTS || !flash_ok)
+        if (na < 2u || a[0] >= ED_SMP_EDIT || !flash_ok)
             return;
         ed_b(a[0]);
         ed_b((uint32_t)ed_smp_end(a[0], a + 1, na - 1u));
@@ -431,6 +435,154 @@ static void ed_handle(const uint8_t *f, uint32_t n)   /* f: the bytes between F0
                 nm[j] = h->name[j] >= 32 && h->name[j] < 127 ? h->name[j] : 0;
             ed_str(nm, 8);
             ed_b(usr_nz[i] ? (h->data_len + 1023u) / 1024u : 0u);
+        }
+        break;
+    case ED_SONG_BEGIN:                                    /* -> rc. Stops the player; the bank is empty from now on */
+        if (!flash_ok)
+            return;
+        demo_req = 2;
+        while (demo_on)
+            fm1_wdt_feed();
+        m1b.scan = 1;                                      /* the list: no songs until SONG_END */
+        m1b.writing = 1;
+        audio_silence();
+        {
+            uint32_t took;
+            ed_b(fl_erase4k(SONG_BASE, &took) ? 1u : 0u);
+        }
+        m1_inval(SONG_BASE, 0x1000u);
+        break;
+    case ED_SONG_WRITE: {                                  /* off (3 x 7 bit), pack7 data -> off, rc (as SMP_WRITE) */
+        uint32_t off, len, rc = 0, took;
+        if (na < 4u || !flash_ok)
+            return;
+        off = (uint32_t)a[0] | (uint32_t)a[1] << 7 | (uint32_t)a[2] << 14;
+        len = ed_unpack7(a + 3, na - 3u, ed_smp_buf, 256u);
+        if (off < SONG_DATA || (off & 0xFFu) || !len || off + len > SONG_SIZE)
+            rc = 1;
+        else if (!m1b.writing)
+            rc = 4;                                        /* SONG_BEGIN first */
+        else {
+            if (!(off & 0xFFFu)) {
+                audio_silence();
+                rc = fl_erase4k(SONG_BASE + off, &took) ? 2u : 0u;
+            }
+            if (!rc && fl_write(SONG_BASE + off, ed_smp_buf, len))
+                rc = 3;
+        }
+        ed_b(off);
+        ed_b(off >> 7);
+        ed_b(off >> 14);
+        ed_b(rc);
+        break;
+    }
+    case ED_SONG_END: {                                    /* pack7 header (420 B) -> rc: 0 ok, 1 size, 2 header, 3 CRC, 4 flash */
+        uint32_t rc = 0;
+        if (!flash_ok)
+            return;
+        if (ed_unpack7(a, na, ed_smp_buf, sizeof(song_hdr_t)) != sizeof(song_hdr_t))
+            rc = 1;
+        else {
+            const song_hdr_t *h = (const song_hdr_t *)ed_smp_buf;
+            m1_inval(SONG_BASE, SONG_SIZE);
+            if (h->magic != SONG_MAGIC || h->version != 1 || !h->count || h->count > SONG_MAX ||
+                h->data_len > SONG_SIZE - SONG_DATA)
+                rc = 2;
+            else if (st_crc32(m1_xip(SONG_BASE + SONG_DATA), h->data_len) != h->crc)
+                rc = 3;
+            else if (fl_write(SONG_BASE, ed_smp_buf, sizeof(song_hdr_t)))
+                rc = 4;
+            m1_inval(SONG_BASE, 0x1000u);
+        }
+        m1b.writing = 0;
+        m1b.scan = 1;
+        ed_b(rc);
+        break;
+    }
+    case ED_SONG_INFO:                                     /* -> count, then per song: notes (3 x 7 bit), name */
+        if (!flash_ok)
+            return;
+        {
+            const song_hdr_t *h = m1_songs();
+            uint32_t c = h ? h->count : 0u;
+            ed_b(c);
+            for (i = 0; i < c; i++) {
+                char nm[13] = {0};
+                uint32_t j;
+                for (j = 0; j < 12u; j++)
+                    nm[j] = h->e[i].name[j] >= 32 && h->e[i].name[j] < 127 ? h->e[i].name[j] : 0;
+                ed_b(h->e[i].notes);
+                ed_b(h->e[i].notes >> 7);
+                ed_b(h->e[i].notes >> 14);
+                ed_str(nm, 12);
+            }
+        }
+        break;
+    case ED_SK_INFO:                                       /* -> sketches, sectors used, sectors, KiB per sector */
+        if (!flash_ok)
+            return;
+        ed_b(m1b.nsk);
+        ed_b(m1b.free_sect);
+        ed_b(SK_NSECT);
+        ed_b(4);
+        break;
+    case ED_SK_READ:                                       /* off (3 x 7 bit) -> off, pack7 256 bytes of the sketch area */
+    case ED_SONG_READ: {                                   /* off (3 x 7 bit) -> off, pack7 256 bytes of the song bank */
+        uint32_t off, k;
+        const uint8_t *p;
+        if (na < 3u || !flash_ok)
+            return;
+        off = (uint32_t)a[0] | (uint32_t)a[1] << 7 | (uint32_t)a[2] << 14;
+        if (off + 256u > (cmd == ED_SK_READ ? SK_NSECT * 0x1000u : SONG_SIZE))
+            return;
+        p = m1_xip((cmd == ED_SK_READ ? SK_BASE : SONG_BASE) + off);
+        ed_b(off);
+        ed_b(off >> 7);
+        ed_b(off >> 14);
+        for (k = 0; k < 256u; k += 7u) {                   /* pack7: the top bits, then 7 bytes */
+            uint32_t j, m = 0;
+            for (j = 0; j < 7u && k + j < 256u; j++)
+                m |= (uint32_t)(p[k + j] >> 7) << j;
+            ed_b(m);
+            for (j = 0; j < 7u && k + j < 256u; j++)
+                ed_b(p[k + j]);
+        }
+        break;
+    }
+    case ED_SK_CLEAR:                                      /* -> rc. Stops the player */
+        if (!flash_ok)
+            return;
+        demo_req = 2;
+        while (demo_on)
+            fm1_wdt_feed();
+        ed_b(m1_sk_clear() ? 1u : 0u);
+        break;
+    case ED_SK_ERASE:                                      /* the sketch j (0 = the first) -> rc. Stops the player */
+        if (na < 1u || !flash_ok)
+            return;
+        demo_req = 2;
+        while (demo_on)
+            fm1_wdt_feed();
+        {
+            uint32_t rc = a[0] < m1b.nsk ? (uint32_t)m1_sk_erase(a[0]) : 1u;
+            m1_rescan();
+            ed_b(rc);
+        }
+        break;
+    case ED_SK_RENAME:                                     /* the sketch j, name (<= 12 chars, 0-ended) -> rc. Stops the player */
+        if (na < 1u || !flash_ok)
+            return;
+        demo_req = 2;
+        while (demo_on)
+            fm1_wdt_feed();
+        {
+            char nm[13] = {0};
+            uint32_t j, rc;
+            for (j = 0; j < 12u && 1u + j < na && a[1u + j]; j++)
+                nm[j] = (char)a[1u + j];
+            rc = a[0] < m1b.nsk ? (uint32_t)m1_sk_rename(a[0], nm) : 1u;
+            m1_rescan();
+            ed_b(rc);
         }
         break;
     case ED_UP_LIST: {                                     /* start, count -> start, count, total, per slot: used, engine, name */

@@ -1,0 +1,236 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only
+     Copyright (C) 2026 Leo Kuroshita (@kurogedelic), Hügelton Instruments (the installer, Felucca's index_pkg.html)
+     Copyright (C) 2026 Alexis Arakis (Bungle Society) (Modular One)
+     The web installer of Modular One: web/make_m1_site.py puts fm1pkg.js, fm1ota.js (the LIB mark) and the
+     package's metadata (the META mark) in it. Chrome or Edge (Web MIDI with SysEx). -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Installer Modular One</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+  :root { --bg: #9bbc0f; --panel: #8bac0f; --dim: #306230; --ink: #0f380f; --paper: #c4d77a; --warn: #7a1f12; --shadow: rgba(15, 56, 15, .25); }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #0f1a0b; --panel: #1b2a12; --dim: #6f9a3a; --ink: #c8e46a; --paper: #22341a; --warn: #ff8a6a; --shadow: rgba(0,0,0,.4); }
+  }
+  :root[data-theme="dark"] { --bg: #0f1a0b; --panel: #1b2a12; --dim: #6f9a3a; --ink: #c8e46a; --paper: #22341a; --warn: #ff8a6a; --shadow: rgba(0,0,0,.4); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); }
+  body { font: 15px/1.55 "IBM Plex Mono", ui-monospace, Menlo, monospace; padding: 0 16px 48px; }
+  .px { font-family: "Silkscreen", "IBM Plex Mono", monospace; letter-spacing: .04em; }
+  main { max-width: 640px; margin: 0 auto; padding-top: 28px; }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .top a { color: var(--dim); text-decoration: none; font-size: 13px; }
+  .lang { font-family: "Silkscreen", monospace; font-size: 12px; }
+  .lang a { color: var(--dim); cursor: pointer; padding: 2px 4px; text-decoration: none; }
+  .lang a.on { color: var(--ink); text-decoration: underline; }
+  h1 { font-size: 30px; line-height: 1.05; margin: 22px 0 6px; }
+  .tag { color: var(--dim); margin: 0 0 22px; }
+  .box { background: var(--panel); border: 3px solid var(--ink); box-shadow: 6px 6px 0 var(--shadow); padding: 18px 20px; margin-bottom: 22px; }
+  ol.steps { margin: 0; padding-left: 22px; }
+  ol.steps li { margin: 4px 0; }
+  button { font-family: "Silkscreen", monospace; font-size: 16px; letter-spacing: .04em; background: var(--ink); color: var(--bg);
+           border: 0; padding: 12px 22px; cursor: pointer; box-shadow: 4px 4px 0 var(--shadow); margin-top: 16px; }
+  button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--shadow); }
+  button:disabled { opacity: .35; cursor: default; transform: none; }
+  .bar { height: 10px; background: var(--paper); margin-top: 16px; }
+  .bar i { display: block; height: 100%; width: 0; background: var(--ink); transition: width .2s; }
+  #status { margin-top: 12px; min-height: 1.6em; font-weight: 600; }
+  details { margin-top: 10px; font-size: 12px; color: var(--dim); }
+  pre { white-space: pre-wrap; font-size: 11.5px; margin: 6px 0 0; max-height: 180px; overflow: auto; }
+  .after { display: none; }
+  .after.on { display: block; }
+  .warn { border-color: var(--warn); }
+  .warn h2 { color: var(--warn); }
+  h2 { font-size: 15px; margin: 0 0 8px; }
+  .small { font-size: 12.5px; color: var(--dim); }
+  .small a, .box a { color: inherit; }
+  p { margin: 0 0 10px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><a href="../" class="px">← MODULAR ONE</a><div class="lang"><a data-lang="fr">FR</a>/<a data-lang="en">EN</a></div></div>
+  <h1 class="px" data-t="title"></h1>
+  <p class="tag" data-t="tag"></p>
+
+  <div class="box">
+    <ol class="steps">
+      <li data-t="s1"></li>
+      <li data-t="s2"></li>
+      <li data-t="s3"></li>
+      <li data-t="s4"></li>
+    </ol>
+    <button id="go" disabled data-t="install"></button>
+    <div class="bar"><i id="bar"></i></div>
+    <p id="status"></p>
+    <details><summary data-t="details"></summary><pre id="log"></pre></details>
+  </div>
+
+  <div class="box after" id="after">
+    <h2 class="px" data-t="nextTitle"></h2>
+    <p data-t="next1"></p>
+    <p><a href="../carnet/" data-t="next2"></a></p>
+    <p><a href="https://github.com/bunglesociety/modular-one/blob/main/docs/GUIDE_FR.md" target="_blank" rel="noopener" data-t="next3"></a></p>
+  </div>
+
+  <div class="box warn">
+    <h2 class="px" data-t="riskTitle"></h2>
+    <p data-t="beta"></p>
+    <p class="small" data-t="presets"></p>
+    <p class="small" data-t="back"></p>
+    <p class="small"><a href="https://www.m-vave.com/download" target="_blank" rel="noopener">www.m-vave.com/download</a></p>
+    <p class="small"><span data-t="brick"></span>
+      <a href="https://github.com/kurogedelic/FM-1-transporter" target="_blank" rel="noopener">FM-1-transporter</a></p>
+  </div>
+
+  <p class="small">Modular One by Alexis Arakis, <a href="https://bunglesociety.com" target="_blank" rel="noopener">Bungle Society</a>.
+    <span data-t="based"></span> Felucca by Leo Kuroshita (@kurogedelic), <a href="https://hugelton.com" target="_blank" rel="noopener">Hügelton Instruments</a>.<br>
+    Fonts: Silkscreen, Terminus (SIL OFL 1.1). Samples: Versilian Studios VSCO-2 CE and VCSL (CC0 1.0), Hügelton Sample Pack (© Hügelton Instruments).<br>
+    M-VAVE and FM-1 are trademarks of their respective owners.<br>
+    <span data-t="license"></span> <a href="https://github.com/bunglesociety/modular-one" target="_blank" rel="noopener">github.com/bunglesociety/modular-one</a></p>
+</main>
+<script type="module">
+/*LIB*/
+const $ = (id) => document.getElementById(id);
+const TEXT = {
+  fr: {
+    title: "Installer Modular One", tag: "Le firmware de Bungle Society pour le M-VAVE FM-1 : sons de musique de film, magnéto, carnet de croquis.",
+    s1: "Ouvre cette page dans Chrome ou Edge, sur un ordinateur (pas Safari, pas Firefox, pas de téléphone).",
+    s2: "Branche le FM-1 directement à l'ordinateur avec un câble USB de données (pas de hub). Allume-le.",
+    s3: "Ferme les autres logiciels qui utilisent le MIDI (ton logiciel de musique, l'app M-VAVE…).",
+    s4: "Clique Installer, autorise le MIDI quand Chrome le demande, et ne débranche rien jusqu'à « Terminé » (environ 2 minutes).",
+    install: "Installer", details: "Détails techniques",
+    nextTitle: "Et maintenant ?",
+    next1: "Le FM-1 redémarre sur Modular One. Joue, puis maintiens REC pour garder ta dernière phrase dans le carnet. OCT- et OCT+ maintenus ensemble 1 seconde lancent le magnéto.",
+    next2: "Ouvrir le Carnet : envoie tes fichiers MIDI au FM-1 et récupère tes croquis →",
+    next3: "Lire le guide complet →",
+    riskTitle: "À lire avant",
+    beta: "Modular One est une version bêta, non officielle. Elle peut avoir des bugs. Tu l'installes à tes risques : l'auteur ne peut pas être tenu responsable d'un problème sur ton FM-1.",
+    presets: "L'installation remplace le firmware M-VAVE : les presets que tu as faits avec le firmware d'origine seront perdus, et on ne peut pas les exporter avant.",
+    back: "Pour revenir au firmware officiel : l'outil de mise à jour M-VAVE, M-UPGRADE (Downloads → PC Software → M-UPGRADE), et le firmware officiel du FM-1 (PC Firmware).",
+    brick: "Si une installation échoue et que le FM-1 ne démarre plus, il faut un Transporter pour le récupérer :",
+    based: "Basé sur", license: "GPL-3.0, sans garantie. Code source :",
+    nomidi: "Ce navigateur ne peut pas le faire. Ouvre la page dans Chrome ou Edge.", loadfail: "Impossible de charger : ",
+    ready: "Prêt : Modular One ", start: "Démarrage", verify: "Vérification", loader: "Passage en mode mise à jour", write: "Écriture",
+    reboot: "Redémarrage", done: "Terminé ! Modular One est installé.", stopped: "Arrêté. Rebranche le câble USB et clique encore sur Installer.",
+    error: "Erreur : ",
+    denied: "Le MIDI (SysEx) n'a pas été autorisé. Autorise le MIDI dans les réglages du site (à gauche de l'adresse) et clique encore sur Installer.",
+    notfound: "FM-1 introuvable. Vérifie le câble USB (un câble de données), ferme les autres apps MIDI, et clique encore sur Installer.",
+    model: "L'appareil branché n'est pas un FM-1.",
+    lost: "La connexion USB a été perdue. Rebranche et clique encore sur Installer.",
+    noloader: "Le FM-1 en mode mise à jour est introuvable. Rebranche le câble USB et clique encore sur Installer (il reste en mode mise à jour jusqu'à la fin).",
+    noreturn: "Le FM-1 n'est pas revenu. Éteins-le et rallume-le.",
+    mismatch: "Écrit, mais le FM-1 annonce une autre version : ",
+    badpkg: "Le fichier à installer est abîmé. Recharge la page.",
+    leave: "Écriture en cours. Ne ferme pas la page.",
+  },
+  en: {
+    title: "Install Modular One", tag: "Bungle Society's firmware for the M-VAVE FM-1: film-music sounds, a tape player, a sketchbook.",
+    s1: "Open this page in Chrome or Edge, on a computer (not Safari, not Firefox, not a phone).",
+    s2: "Connect the FM-1 straight to the computer with a USB data cable (no hub). Switch it on.",
+    s3: "Close other apps that use MIDI (your DAW, the M-VAVE app…).",
+    s4: "Click Install, allow MIDI when Chrome asks, and unplug nothing until \"Done\" (about 2 minutes).",
+    install: "Install", details: "Technical details",
+    nextTitle: "What now?",
+    next1: "The FM-1 restarts on Modular One. Play, then hold REC to keep your last phrase in the sketchbook. Hold OCT- and OCT+ together for 1 second to start the tape player.",
+    next2: "Open the Carnet: send your MIDI files to the FM-1 and get your sketches back →",
+    next3: "Read the full guide (French) →",
+    riskTitle: "Read this first",
+    beta: "Modular One is an unofficial beta. It may have bugs. You install it at your own risk: the author cannot be held responsible for any problem with your FM-1.",
+    presets: "Installing replaces the M-VAVE firmware: the presets you made with the original firmware will be lost, and they cannot be exported first.",
+    back: "To go back to the official firmware: M-VAVE's updater, M-UPGRADE (Downloads → PC Software → M-UPGRADE), and the official FM-1 firmware (PC Firmware).",
+    brick: "If an install fails and the FM-1 no longer starts, recovering it needs a Transporter:",
+    based: "Based on", license: "GPL-3.0, no warranty. Source:",
+    nomidi: "This browser cannot do it. Open the page in Chrome or Edge.", loadfail: "Could not load: ",
+    ready: "Ready: Modular One ", start: "Starting", verify: "Verifying", loader: "Switching to update mode", write: "Writing",
+    reboot: "Restarting", done: "Done! Modular One is installed.", stopped: "Stopped. Replug the USB cable and click Install again.",
+    error: "Error: ",
+    denied: "MIDI (SysEx) access was not allowed. Allow MIDI in the site settings (left of the address) and click Install again.",
+    notfound: "FM-1 not found. Check the USB cable (a data cable), close other MIDI apps, and click Install again.",
+    model: "The connected device is not an FM-1.",
+    lost: "The USB connection was lost. Replug it and click Install again.",
+    noloader: "The FM-1 in update mode was not found. Replug the USB cable and click Install again (it stays in update mode until it is finished).",
+    noreturn: "The FM-1 did not come back. Switch it off and on.",
+    mismatch: "Written, but the FM-1 reports another version: ",
+    badpkg: "The file to install is damaged. Reload the page.",
+    leave: "Writing. Do not close the page.",
+  },
+};
+let lang = (() => { try { return localStorage.getItem("m1lang"); } catch { return null; } })() || ((navigator.language || "en").toLowerCase().startsWith("fr") ? "fr" : "en");
+if (!TEXT[lang]) lang = "en";
+const t = (k) => TEXT[lang][k];
+let lastKey = null, lastArg = "";
+function applyLang() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-t]").forEach((e) => { e.textContent = t(e.dataset.t); });
+  document.querySelectorAll("[data-lang]").forEach((a) => a.classList.toggle("on", a.dataset.lang === lang));
+  document.title = t("title");
+  if (lastKey) $("status").textContent = t(lastKey) + lastArg;
+}
+document.querySelectorAll("[data-lang]").forEach((a) => a.addEventListener("click", () => { lang = a.dataset.lang; try { localStorage.setItem("m1lang", lang); } catch {} applyLang(); }));
+applyLang();
+const sayK = (k, arg = "") => { lastKey = k; lastArg = arg; $("status").textContent = t(k) + arg; };
+const log = (s) => { $("log").textContent += s + "\n"; };
+const bar = (f) => { $("bar").style.width = `${Math.max(0, Math.min(100, f))}%`; };
+let image = null;
+const meta = /*META*/;
+
+let writing = false;
+window.addEventListener("beforeunload", (e) => { if (writing) { e.preventDefault(); e.returnValue = t("leave"); } });
+
+(async () => {
+  if (!navigator.requestMIDIAccess) { sayK("nomidi"); return; }
+  try {
+    const r = await fetch(meta.pkg);
+    if (!r.ok) throw new Error(`${meta.pkg}: HTTP ${r.status}`);
+    const pkg = new Uint8Array(await r.arrayBuffer());
+    if (productOf(pkg) !== meta.product) { sayK("badpkg"); return; }
+    image = logicalImage(pkg);
+    sayK("ready", meta.version);
+    $("go").disabled = false;
+  } catch (e) { sayK("loadfail", e.message); }
+})();
+
+$("go").addEventListener("click", async () => {
+  $("go").disabled = true;
+  $("after").classList.remove("on");
+  let midi;
+  try { midi = await navigator.requestMIDIAccess({ sysex: true }); }
+  catch (e) { sayK("denied"); $("go").disabled = false; return; }
+  writing = true;
+  try {
+    const up = new Updater(midi, log);
+    const total = 74 + 1167;
+    const step = (k, a) => {
+      log(`${k} ${a ?? ""}`);
+      if (k === "start") sayK("start");
+      if (k === "verify") { sayK("verify"); bar((a / total) * 100); }
+      if (k === "loader") sayK("loader");
+      if (k === "write") { sayK("write"); bar(((74 + a) / total) * 100); }
+      if (k === "reboot") sayK("reboot");
+      if (k === "done") { bar(100); sayK("done"); $("after").classList.add("on"); }
+    };
+    const ota = await up.find((id) => /^ota-/i.test(id.model));
+    if (ota) {
+      ota.link.close();
+      const ok = await up.resume(image, step);
+      sayK(ok ? "done" : "stopped");
+      if (ok) $("after").classList.add("on");
+    } else {
+      await up.install(image, meta.product, step);
+    }
+  } catch (e) {
+    if (e && e.code && TEXT[lang][e.code]) sayK(e.code, e.detail || "");
+    else sayK("error", e && e.message);
+    log(String(e && e.stack || e));
+  }
+  writing = false;
+  $("go").disabled = false;
+});
+</script>
+</body>
+</html>

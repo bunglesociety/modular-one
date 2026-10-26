@@ -1,0 +1,125 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only
+     Copyright (C) 2026 Alexis Arakis (Bungle Society)
+     The site's home page (web/make_site.py writes it as index.html). -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modular One</title>
+<meta name="description" content="Modular One : un firmware gratuit pour le synthé M-VAVE FM-1, par Bungle Society. Sons de musique de film, magnéto, carnet de croquis.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+  :root { --bg: #9bbc0f; --panel: #8bac0f; --dim: #306230; --ink: #0f380f; --paper: #c4d77a; --shadow: rgba(15, 56, 15, .25); }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #0f1a0b; --panel: #1b2a12; --dim: #6f9a3a; --ink: #c8e46a; --paper: #22341a; --shadow: rgba(0,0,0,.4); }
+  }
+  :root[data-theme="dark"] { --bg: #0f1a0b; --panel: #1b2a12; --dim: #6f9a3a; --ink: #c8e46a; --paper: #22341a; --shadow: rgba(0,0,0,.4); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); }
+  body { font: 15px/1.6 "IBM Plex Mono", ui-monospace, Menlo, monospace; padding: 0 16px 48px; }
+  .px { font-family: "Silkscreen", "IBM Plex Mono", monospace; letter-spacing: .04em; }
+  main { max-width: 860px; margin: 0 auto; padding-top: 28px; }
+  .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .top a { color: var(--dim); text-decoration: none; font-size: 13px; }
+  .lang { font-family: "Silkscreen", monospace; font-size: 12px; }
+  .lang a { color: var(--dim); cursor: pointer; padding: 2px 4px; text-decoration: none; }
+  .lang a.on { color: var(--ink); text-decoration: underline; }
+  h1 { font-size: clamp(34px, 7vw, 56px); line-height: 1; margin: 40px 0 12px; }
+  .lead { font-size: 17px; max-width: 620px; margin: 0 0 8px; }
+  .by { color: var(--dim); margin: 0 0 34px; }
+  .by a { color: inherit; }
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  @media (max-width: 760px) { .cards { grid-template-columns: 1fr; } }
+  a.card { display: block; text-decoration: none; color: var(--ink); background: var(--panel); border: 3px solid var(--ink);
+           box-shadow: 6px 6px 0 var(--shadow); padding: 18px 18px 16px; transition: transform .08s; }
+  a.card:hover { transform: translate(-2px, -2px); box-shadow: 8px 8px 0 var(--shadow); }
+  a.card:active { transform: translate(2px, 2px); box-shadow: 3px 3px 0 var(--shadow); }
+  a.card.main { background: var(--ink); color: var(--bg); }
+  .card h2 { font-size: 17px; margin: 0 0 8px; }
+  .card p { margin: 0; font-size: 13.5px; }
+  .card .go { display: block; margin-top: 12px; font-family: "Silkscreen", monospace; font-size: 13px; }
+  h3 { font-size: 15px; margin: 44px 0 10px; }
+  ul.feat { margin: 0; padding-left: 20px; }
+  ul.feat li { margin: 4px 0; }
+  .need { background: var(--paper); border-left: 4px solid var(--ink); padding: 12px 16px; margin-top: 10px; font-size: 13.5px; }
+  footer { margin-top: 44px; font-size: 12.5px; color: var(--dim); border-top: 2px solid var(--ink); padding-top: 14px; }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><a href="https://bunglesociety.com" class="px">BUNGLE SOCIETY</a><div class="lang"><a data-lang="fr">FR</a>/<a data-lang="en">EN</a></div></div>
+  <h1 class="px">Modular One</h1>
+  <p class="lead" data-t="lead"></p>
+  <p class="by"><span data-t="by"></span> <a href="https://www.youtube.com/@bunglesociety" target="_blank" rel="noopener">YouTube</a></p>
+
+  <div class="cards">
+    <a class="card main" href="install/"><h2 class="px" data-t="c1"></h2><p data-t="c1p"></p><span class="go" data-t="c1go"></span></a>
+    <a class="card" href="carnet/"><h2 class="px" data-t="c2"></h2><p data-t="c2p"></p><span class="go" data-t="c2go"></span></a>
+    <a class="card" href="https://github.com/bunglesociety/modular-one/blob/main/docs/GUIDE_FR.md" target="_blank" rel="noopener"><h2 class="px" data-t="c3"></h2><p data-t="c3p"></p><span class="go" data-t="c3go"></span></a>
+  </div>
+
+  <h3 class="px" data-t="whatTitle"></h3>
+  <ul class="feat">
+    <li data-t="f1"></li>
+    <li data-t="f2"></li>
+    <li data-t="f3"></li>
+    <li data-t="f4"></li>
+  </ul>
+  <div class="need" data-t="need"></div>
+
+  <footer>
+    <span data-t="based"></span> <a href="https://github.com/hugelton/Felucca" target="_blank" rel="noopener">Felucca</a>
+    by Leo Kuroshita (@kurogedelic), <a href="https://hugelton.com" target="_blank" rel="noopener">Hügelton Instruments</a>.
+    <span data-t="thanks"></span><br>
+    <span data-t="license"></span> <a href="https://github.com/bunglesociety/modular-one" target="_blank" rel="noopener">github.com/bunglesociety/modular-one</a>.
+    <span data-t="tm"></span>
+  </footer>
+</main>
+<script>
+const TEXT = {
+  fr: {
+    lead: "Un firmware gratuit pour le synthé M-VAVE FM-1 : des sons pensés pour la musique de film, un magnéto qui joue tes morceaux, et un carnet de croquis qui garde ce que tu viens de jouer.",
+    by: "Par Alexis Arakis, compositeur, Bungle Society ·",
+    c1: "Installer", c1p: "Branche ton FM-1 en USB et installe Modular One depuis cette page, en deux minutes.", c1go: "Installer →",
+    c2: "Carnet", c2p: "Envoie tes fichiers MIDI au FM-1, récupère tes croquis en MIDI pour ton logiciel.", c2go: "Ouvrir le Carnet →",
+    c3: "Guide", c3p: "Tous les gestes, les 40 sons, le magnéto et le carnet expliqués.", c3go: "Lire le guide →",
+    whatTitle: "Ce que ça change",
+    f1: "40 sons en 5 familles (souffles, claviers, lumières, ombres, néon), pensés pour composer à l'image.",
+    f2: "Le carnet de croquis : le FM-1 écoute en permanence. Maintiens REC et il garde ta dernière phrase.",
+    f3: "Le magnéto : OCT- et OCT+ maintenus ensemble, il joue tes morceaux et tes croquis en boucle.",
+    f4: "Modular Town : une petite ville en pixels qui s'anime quand tu ne joues pas.",
+    need: "Il faut un FM-1, un câble USB de données, et Chrome ou Edge sur ordinateur. C'est une bêta non officielle : lis les précautions sur la page d'installation. Le retour au firmware M-VAVE reste possible.",
+    based: "Basé sur", thanks: "Merci à lui du fond du cœur.",
+    license: "Logiciel libre GPL-3.0, sans garantie. Code source :", tm: "M-VAVE et FM-1 sont des marques de leurs propriétaires.",
+  },
+  en: {
+    lead: "A free firmware for the M-VAVE FM-1 synth: sounds made for film music, a tape player for your songs, and a sketchbook that keeps what you just played.",
+    by: "By Alexis Arakis, composer, Bungle Society ·",
+    c1: "Install", c1p: "Connect your FM-1 by USB and install Modular One from this page, in two minutes.", c1go: "Install →",
+    c2: "Carnet", c2p: "Send your MIDI files to the FM-1, get your sketches back as MIDI for your DAW.", c2go: "Open the Carnet →",
+    c3: "Guide", c3p: "Every gesture, the 40 sounds, the tape player and the sketchbook (in French).", c3go: "Read the guide →",
+    whatTitle: "What it does",
+    f1: "40 sounds in 5 families (breaths, keys, lights, shadows, neon), made for scoring to picture.",
+    f2: "The sketchbook: the FM-1 always listens. Hold REC and it keeps your last phrase.",
+    f3: "The tape player: hold OCT- and OCT+ together and it plays your songs and sketches in a loop.",
+    f4: "Modular Town: a small pixel town that comes alive when you stop playing.",
+    need: "You need an FM-1, a USB data cable, and Chrome or Edge on a computer. This is an unofficial beta: read the notes on the install page. Going back to the M-VAVE firmware stays possible.",
+    based: "Based on", thanks: "Heartfelt thanks to him.",
+    license: "Free software, GPL-3.0, no warranty. Source:", tm: "M-VAVE and FM-1 are trademarks of their respective owners.",
+  },
+};
+let lang = (() => { try { return localStorage.getItem("m1lang"); } catch { return null; } })() || ((navigator.language || "en").toLowerCase().startsWith("fr") ? "fr" : "en");
+if (!TEXT[lang]) lang = "en";
+function apply() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-t]").forEach((e) => { e.textContent = TEXT[lang][e.dataset.t]; });
+  document.querySelectorAll("[data-lang]").forEach((a) => a.classList.toggle("on", a.dataset.lang === lang));
+}
+document.querySelectorAll("[data-lang]").forEach((a) => a.addEventListener("click", () => { lang = a.dataset.lang; try { localStorage.setItem("m1lang", lang); } catch {} apply(); }));
+apply();
+</script>
+</body>
+</html>

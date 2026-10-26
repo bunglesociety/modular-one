@@ -98,6 +98,12 @@ static int st_prog(uint32_t off, const void *src, uint32_t n)
 #endif
 #include "upreset.c"          /* user presets (RAM mirror; flash with FELUCCA_FLASH) */
 #include "project.c"
+#if FELUCCA_FLASH
+#include "m1_book.c"          /* Modular One: songs and sketches in flash, for the player (seq.c) */
+#else
+static void m1_boot(void) {}
+static void m1_service(void) { m1_keep_req = 0; m1_del_req = 0; }
+#endif
 #if FELUCCA_OTA
 #include "ota.c"
 static uint32_t ota_now_ms(void) { return fm1_ms; }

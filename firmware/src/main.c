@@ -100,8 +100,10 @@ static void fm1_main(void)
         ota_boot_cleanup();                             /* staging area left by an update */
 #endif
     settings_init();
+    m1_boot();                                      /* the player's list: songs, sketches */
     lcd_init();
-    lcd_fill(0, 0, 240, 240, M_BG);                 /* the opening is drawn by ui_draw (5 s) */
+    m1_theme_apply(1);
+    lcd_fill(0, 0, 240, 240, M_BG);         /* the opening is drawn by ui_draw (5 s) */
     if (felucca_dbg.magic != DBG_MAGIC) {
         memset(&felucca_dbg, 0, sizeof felucca_dbg);
         felucca_dbg.magic = DBG_MAGIC;
@@ -204,6 +206,7 @@ static void fm1_main(void)
 #if FELUCCA_CDC
         cdc_task();
 #endif
+        m1_service();                                   /* keep a sketch, rebuild the player's list */
         felucca_dbg.ui_frames++;
         felucca_dbg.page = ui.page;
         felucca_dbg.home = ui.home;

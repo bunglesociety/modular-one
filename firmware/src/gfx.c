@@ -51,6 +51,8 @@ static uint16_t pal[5];
 #define GB1 RGB(139, 172, 15)
 #define GB2 RGB(48, 98, 48)
 #define GB3 RGB(15, 56, 15)          /* darkest: the ink */
+static uint8_t m1_bold;              /* bold letters: the small letters drawn twice, a pixel apart */
+
 static const uint16_t KC[4] = {GB3, GB2, GB3, GB2};
 static const uint16_t UIC[6] = {GB0, GB1, GB1, GB2, GB2, GB3};   /* ground, panel, rules, dim, grey, ink */
 #define ui_light 1u

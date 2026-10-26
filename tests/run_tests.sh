@@ -57,7 +57,7 @@ mkdir -p build/slicer_demo
 run "SLICER: no clicks, timing, sync with the sequencer, STUT, cost, demos" "$OUT/slicer_test" build/slicer_demo
 $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/mt_test" tests/mt_test.c -lm
 mkdir -p build/mt_demo
-for k in $(seq 0 15); do
+for k in $(seq 0 39); do
     run "Modular One: film scene, TOWN preset $k (no clipping, no DC, lines in range, tails die out)" \
         "$OUT/mt_test" "build/mt_demo/scene_$k.wav" $k
 done
@@ -66,7 +66,9 @@ mkdir -p build/m1_tour
 run "Modular One: the preset tour, one WAV per family (no clipping)" "$OUT/m1_tour" build/m1_tour
 $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/m1_demo" tests/m1_demo.c -lm
 mkdir -p build/m1_demo
-run "Modular One: the demo piece (Gymnopedie) ends by itself, no clipping, nothing left held" "$OUT/m1_demo" build/m1_demo/album.wav 16
+run "Modular One: the demo piece (Gymnopedie) plays to its end, stops cleanly, no clipping, nothing left held" "$OUT/m1_demo" build/m1_demo/album.wav 16
+$CC -O1 -w -Ibuild/gen -Ifirmware/src -o "$OUT/m1_book_test" tests/m1_book_test.c -lm
+run "Modular One: the sketchbook (phrases, depth, held keys, window, ring) and the player (next, restart, previous, gaps)" "$OUT/m1_book_test"
 $CC -O2 -w -Ibuild/gen -Ifirmware/src -o "$OUT/mt_city_host" tests/mt_city_host.c -lm
 mkdir -p build/city_frames
 run "Modular Town FM: the window (day to night, the island, barges, rings, panel bounds, cost)" \

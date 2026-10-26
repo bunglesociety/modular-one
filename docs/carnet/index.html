@@ -1,0 +1,771 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: GPL-3.0-only
+     Copyright (C) 2026 Alexis Arakis (Bungle Society)
+     Modular One: the songs of the player and the sketchbook, in Chrome over USB-MIDI (Web MIDI + SysEx).
+     One file, no libraries. Protocol: EDITOR_PROTOCOL.md, cmds 40..48; flash: firmware/src/m1_book.c.
+     Same formats as tools/fm1_songs.py. ?demo runs it on a pretend FM-1. -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modular One Carnet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+  :root {
+    --bg: #9bbc0f; --panel: #8bac0f; --dim: #306230; --ink: #0f380f; --paper: #c4d77a;
+    --warn: #7a1f12; --shadow: rgba(15, 56, 15, .25);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --bg: #0f1a0b; --panel: #1b2a12; --dim: #6f9a3a; --ink: #c8e46a; --paper: #22341a; --warn: #ff8a6a; --shadow: rgba(0,0,0,.4); }
+  }
+  :root[data-theme="dark"] { --bg: #0f1a0b; --panel: #1b2a12; --dim: #6f9a3a; --ink: #c8e46a; --paper: #22341a; --warn: #ff8a6a; --shadow: rgba(0,0,0,.4); }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); }
+  body { font: 15px/1.45 "IBM Plex Mono", ui-monospace, Menlo, monospace; padding: 0 16px 48px; }
+  .px { font-family: "Silkscreen", "IBM Plex Mono", monospace; letter-spacing: .04em; }
+  header { max-width: 1120px; margin: 0 auto; padding: 22px 0 14px; display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; border-bottom: 3px solid var(--ink); }
+  h1 { margin: 0; font-size: 26px; font-weight: 700; line-height: 1; }
+  h1 small { display: block; font-size: 12px; font-weight: 400; color: var(--dim); margin-top: 6px; }
+  .grow { flex: 1; }
+  button, .btn {
+    font: inherit; font-family: "Silkscreen", monospace; font-size: 13px; letter-spacing: .04em;
+    background: var(--ink); color: var(--bg); border: 0; padding: 8px 12px; cursor: pointer; border-radius: 0;
+    box-shadow: 3px 3px 0 var(--shadow);
+  }
+  button:hover { filter: brightness(1.15); }
+  button:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--shadow); }
+  button:disabled { opacity: .35; cursor: default; transform: none; }
+  button.ghost { background: transparent; color: var(--ink); box-shadow: none; outline: 2px solid var(--ink); outline-offset: -2px; }
+  button.icon { padding: 4px 8px; font-size: 12px; box-shadow: none; background: transparent; color: var(--ink); }
+  button.icon:hover { background: var(--ink); color: var(--bg); }
+  button.danger:hover { background: var(--warn); color: #fff; }
+  .status { font-size: 13px; color: var(--dim); }
+  .status b { color: var(--ink); }
+  .dot { display: inline-block; width: 9px; height: 9px; background: var(--dim); margin-right: 6px; vertical-align: 1px; }
+  .dot.on { background: var(--ink); box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--ink); }
+  main { max-width: 1120px; margin: 22px auto 0; display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
+  section { background: var(--panel); border: 3px solid var(--ink); box-shadow: 6px 6px 0 var(--shadow); display: flex; flex-direction: column; min-width: 0; }
+  section > .head { padding: 14px 16px 10px; border-bottom: 2px solid var(--ink); }
+  section h2 { margin: 0; font-size: 18px; }
+  section .sub { font-size: 12.5px; color: var(--dim); margin-top: 4px; }
+  .bar { height: 8px; background: var(--paper); margin-top: 10px; position: relative; }
+  .bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ink); }
+  .bar.over i { background: var(--warn); }
+  .meter { font-size: 12px; color: var(--dim); margin-top: 4px; display: flex; justify-content: space-between; gap: 8px; }
+  ol { list-style: none; margin: 0; padding: 6px 0; min-height: 120px; flex: 1; }
+  li.row { display: grid; grid-template-columns: 26px 1fr auto; gap: 8px; align-items: center; padding: 6px 10px 6px 12px; border-bottom: 1px dashed var(--dim); }
+  li.row:last-child { border-bottom: 0; }
+  li.row.drag { opacity: .4; }
+  li.row.over { box-shadow: inset 0 3px 0 var(--ink); }
+  li.row.playing { background: var(--paper); }
+  .num { font-family: "Silkscreen", monospace; font-size: 12px; color: var(--dim); text-align: right; }
+  .handle { cursor: grab; }
+  .name { min-width: 0; }
+  .name input { font: inherit; font-family: "Silkscreen", monospace; font-size: 14px; letter-spacing: .04em; text-transform: uppercase;
+                background: transparent; border: 0; border-bottom: 1px solid transparent; color: var(--ink); width: 100%; padding: 1px 0; }
+  .name input:focus { outline: 0; border-bottom-color: var(--ink); background: var(--paper); }
+  .name input:hover:not(:disabled) { border-bottom-color: var(--dim); }
+  .name input::placeholder { color: var(--ink); opacity: .7; }
+  .name .t { font-family: "Silkscreen", monospace; font-size: 14px; letter-spacing: .04em; }
+  .meta { font-size: 11.5px; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tag { font-family: "Silkscreen", monospace; font-size: 10px; padding: 0 4px; border: 1px solid var(--dim); margin-left: 4px; }
+  .tag.new { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .acts { display: flex; gap: 2px; }
+  .empty { padding: 26px 16px; color: var(--dim); font-size: 13.5px; text-align: center; }
+  .drop { margin: 0 12px 12px; padding: 16px; border: 2px dashed var(--dim); text-align: center; font-size: 13px; color: var(--dim); cursor: pointer; }
+  .drop.hot { border-color: var(--ink); background: var(--paper); color: var(--ink); }
+  .foot { padding: 12px 16px 14px; border-top: 2px solid var(--ink); display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .foot .note { font-size: 12px; color: var(--dim); flex-basis: 100%; }
+  .foot .sync { font-family: "Silkscreen", monospace; letter-spacing: .04em; color: var(--ink); }
+  .foot .sync.wait { color: var(--dim); }
+  #toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 10px 16px;
+           font-family: "Silkscreen", monospace; font-size: 13px; letter-spacing: .04em; box-shadow: 4px 4px 0 var(--shadow); max-width: calc(100% - 32px);
+           opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 5; }
+  #toast.on { opacity: 1; }
+  #toast.err { background: var(--warn); color: #fff; }
+  .progress { position: fixed; inset: 0; background: rgba(15, 26, 11, .55); display: none; align-items: center; justify-content: center; z-index: 4; padding: 16px; }
+  .progress.on { display: flex; }
+  .progress .box { background: var(--bg); border: 3px solid var(--ink); padding: 20px 22px; width: min(420px, 100%); box-shadow: 6px 6px 0 var(--shadow); }
+  .progress .box p { margin: 0 0 12px; }
+  .help { max-width: 1120px; margin: 26px auto 0; font-size: 13px; color: var(--dim); }
+  .help b { color: var(--ink); font-weight: 600; }
+  .help ul { margin: 6px 0 0; padding-left: 18px; }
+  .lang { font-family: "Silkscreen", monospace; font-size: 12px; }
+  .lang a { color: var(--dim); text-decoration: none; cursor: pointer; padding: 2px 4px; }
+  .lang a.on { color: var(--ink); text-decoration: underline; }
+  input[type=file] { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <a href="../" class="px" style="color:var(--dim);text-decoration:none;font-size:12px">← MODULAR ONE</a>
+    <h1 class="px">Modular One <span data-t="title">Carnet</span><small data-t="tagline">les morceaux du magnéto, les croquis du carnet</small></h1>
+  </div>
+  <div class="grow"></div>
+  <div class="status" id="status"><span class="dot" id="dot"></span><span id="statusText"></span></div>
+  <button id="connect" data-t="connect">Connecter</button>
+  <div class="lang"><a data-lang="fr">FR</a>/<a data-lang="en">EN</a></div>
+</header>
+
+<main>
+  <section id="songsSec">
+    <div class="head">
+      <h2 class="px" data-t="songs">Morceaux</h2>
+      <div class="sub" data-t="songsSub">Ce que le magnéto joue. Glisse des fichiers .mid, range-les, renomme-les, puis envoie.</div>
+      <div class="bar" id="songBar"><i></i></div>
+      <div class="meter"><span id="songMeter"></span><span id="songCount"></span></div>
+    </div>
+    <ol id="songs"></ol>
+    <div class="drop" id="drop" data-t="drop">Dépose des fichiers MIDI ici, ou clique pour en choisir</div>
+    <input type="file" id="file" accept=".mid,.midi,audio/midi" multiple>
+    <div class="foot">
+      <button id="exportSongs" data-t="exportAll" disabled>Tout exporter (.zip)</button>
+      <button id="reloadSongs" class="ghost" data-t="reload" disabled>Relire</button>
+      <div class="grow"></div>
+      <button id="clearSongs" class="ghost danger" data-t="clearAll" disabled>Tout effacer</button>
+      <div class="note sync" id="syncState"></div>
+    </div>
+  </section>
+
+  <section id="skSec">
+    <div class="head">
+      <h2 class="px" data-t="sketches">Croquis</h2>
+      <div class="sub" data-t="skSub">Ce que tu as gardé avec REC. Écoute, exporte en MIDI, ou fais-en un morceau.</div>
+      <div class="bar" id="skBar"><i></i></div>
+      <div class="meter"><span id="skMeter"></span><span id="skCount"></span></div>
+    </div>
+    <ol id="sketches"></ol>
+    <div class="foot">
+      <button id="exportSk" data-t="exportAll" disabled>Tout exporter (.zip)</button>
+      <button id="reloadSk" class="ghost" data-t="reload" disabled>Relire</button>
+      <div class="grow"></div>
+      <button id="clearSk" class="ghost danger" data-t="clearAll" disabled>Tout effacer</button>
+    </div>
+  </section>
+</main>
+
+<div class="help" id="help"></div>
+
+<div class="progress" id="progress"><div class="box"><p id="progText"></p><div class="bar"><i id="progBar"></i></div></div></div>
+<div id="toast"></div>
+
+<script id="core">
+"use strict";
+/* ------------------------------------------------------------------ formats (as tools/fm1_songs.py) */
+const HDR = [0x7D, 0x46, 0x4C];
+const SONG_MAX = 20, SONG_SIZE = 0x14000, SONG_DATA = 512, SONG_ROOM = SONG_SIZE - SONG_DATA;
+const SONG_MAGIC = 0x314E5346, SK_MAGIC = 0x314B5346, SK_SECTORS = 20;
+const CMD = { INFO: 1, SONG_BEGIN: 40, SONG_WRITE: 41, SONG_END: 42, SONG_INFO: 43, SK_INFO: 44, SK_READ: 45, SK_CLEAR: 46, SONG_READ: 47, SK_ERASE: 48, SK_RENAME: 49 };
+const SK_NAMED = 0xFFFFFFFE, SK_NAME = 12;          /* sketch header flags: the body starts with its name (12 bytes, 0-padded) */
+
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(b) { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+
+function pack7(b) {
+  const out = [];
+  for (let i = 0; i < b.length; i += 7) {
+    const g = b.slice(i, i + 7); let m = 0;
+    for (let j = 0; j < g.length; j++) m |= ((g[j] >> 7) & 1) << j;
+    out.push(m); for (const x of g) out.push(x & 0x7F);
+  }
+  return out;
+}
+function unpack7(a) {
+  const out = [];
+  for (let i = 0; i < a.length; i += 8) { const m = a[i]; for (let j = 0; j < 7 && i + 1 + j < a.length; j++) out.push(a[i + 1 + j] | (((m >> j) & 1) << 7)); }
+  return Uint8Array.from(out);
+}
+/* Python's round(): halves to even, so the bytes match fm1_songs.py */
+function pyRound(x) { const f = Math.floor(x), d = x - f; return d > 0.5 ? f + 1 : d < 0.5 ? f : (f % 2 === 0 ? f : f + 1); }
+function varEnc(v) { v = Math.max(0, Math.min(Math.trunc(v), 0x7FFF)); return v < 128 ? [v] : [0x80 | (v >> 8), v & 255]; }
+function cmpTuple(a, b) { for (let i = 0; i < a.length; i++) { if (a[i] < b[i]) return -1; if (a[i] > b[i]) return 1; } return 0; }
+
+/* notes: [start s, note, vel, length s] -> piece bytes (seq.c: dt 10 ms, note, vel, len 20 ms) */
+function encodePiece(notes) {
+  const out = []; let prev = 0;
+  for (const [s, n, v, d] of [...notes].sort(cmpTuple)) {
+    const t = pyRound(s * 100);
+    out.push(...varEnc(t - prev), n & 127, Math.max(1, Math.min(127, v)), ...varEnc(Math.max(1, Math.trunc(pyRound(d * 50)))));
+    prev = t;
+  }
+  return Uint8Array.from(out);
+}
+function decodePiece(b, count) {
+  const notes = []; let i = 0, t = 0;
+  const rd = () => { let v = b[i++]; if (v & 0x80) v = ((v & 0x7F) << 8) | b[i++]; return v; };
+  for (let k = 0; k < count && i < b.length; k++) { t += rd(); const n = b[i], v = b[i + 1]; i += 2; notes.push([t / 100, n, v, rd() / 50]); }
+  return notes;
+}
+function pieceLength(notes) { return notes.reduce((m, [s, , , d]) => Math.max(m, s + d), 0); }
+
+/* a Standard MIDI File -> notes (every channel; times in seconds, the tempo map applied, as mido does) */
+function readMid(buf) {
+  const b = new Uint8Array(buf); let p = 0;
+  const u32 = () => (b[p++] << 24 | b[p++] << 16 | b[p++] << 8 | b[p++]) >>> 0, u16 = () => b[p++] << 8 | b[p++];
+  const str = () => String.fromCharCode(b[p++], b[p++], b[p++], b[p++]);
+  if (str() !== "MThd") throw new Error("not a MIDI file");
+  const hl = u32(), fmt = u16(), ntr = u16(), div = u16(); p = 8 + hl;
+  if (div & 0x8000) throw new Error("SMPTE time is not supported");
+  const tpb = div, evs = [];                         /* [abs tick, track, order, kind, a, b, c] */
+  let order = 0;
+  for (let tr = 0; tr < ntr && p + 8 <= b.length; tr++) {
+    const id = str(), len = u32(), end = p + len;
+    if (id !== "MTrk") { p = end; continue; }
+    let tick = 0, run = 0;
+    const vlq = () => { let v = 0, c; do { c = b[p++]; v = (v << 7) | (c & 0x7F); } while (c & 0x80 && p < end); return v; };
+    while (p < end) {
+      tick += vlq();
+      let st = b[p];
+      if (st & 0x80) p++; else st = run;
+      if (st === 0xFF) { const ty = b[p++], l = vlq(); if (ty === 0x51 && l === 3) evs.push([tick, tr, order++, "tempo", b[p] << 16 | b[p + 1] << 8 | b[p + 2]]); p += l; run = 0; continue; }
+      if (st === 0xF0 || st === 0xF7) { p += vlq(); run = 0; continue; }
+      run = st;
+      const hi = st & 0xF0, ch = st & 15;
+      if (hi === 0xC0 || hi === 0xD0) { p += 1; continue; }
+      const d1 = b[p++], d2 = b[p++];
+      if (hi === 0x90) evs.push([tick, tr, order++, d2 ? "on" : "off", ch, d1, d2]);
+      else if (hi === 0x80) evs.push([tick, tr, order++, "off", ch, d1, d2]);
+    }
+    p = end;
+  }
+  if (fmt === 2) throw new Error("MIDI format 2 is not supported");
+  evs.sort((x, y) => x[0] - y[0] || x[1] - y[1] || x[2] - y[2]);   /* mido merge_tracks: stable by time */
+  let tempo = 500000, now = 0, last = 0;
+  const notes = [], held = new Map();
+  for (const e of evs) {
+    const delta = e[0] - last; last = e[0];
+    if (delta > 0) now += delta * (tempo * 1e-6 / tpb);
+    if (e[3] === "tempo") { tempo = e[4]; continue; }
+    const k = e[4] * 128 + e[5];
+    if (e[3] === "on") {
+      if (held.has(k)) { const [s, v] = held.get(k); held.delete(k); notes.push([s, e[5], v, now - s]); }
+      held.set(k, [now, e[6]]);
+    } else if (held.has(k)) { const [s, v] = held.get(k); held.delete(k); notes.push([s, e[5], v, Math.max(now - s, 0.02)]); }
+  }
+  for (const [k, [s, v]] of held) notes.push([s, k & 127, v, Math.max(now - s, 0.02)]);
+  if (!notes.length) throw new Error("no notes");
+  const t0 = Math.min(...notes.map((n) => n[0]));
+  return notes.map(([s, n, v, d]) => [s - t0, n, v, d]);
+}
+
+/* notes -> a Standard MIDI File (120 BPM, 480 ticks a beat: 1 s = 960 ticks), as fm1_songs.py */
+function writeMid(notes, name) {
+  const ev = [];
+  for (const [s, n, v, d] of notes) { ev.push([s, 1, n, v]); ev.push([s + d, 0, n, 0]); }
+  ev.sort(cmpTuple);
+  const vlq = (v) => { const o = [v & 0x7F]; while ((v >>= 7)) o.unshift(0x80 | (v & 0x7F)); return o; };
+  const tr = [0, 0xFF, 0x51, 3, 0x07, 0xA1, 0x20];
+  if (name) { const nm = Array.from(name).map((c) => c.charCodeAt(0) & 0x7F); tr.push(0, 0xFF, 0x03, ...vlq(nm.length), ...nm); }
+  let last = 0;
+  for (const [t, on, n, v] of ev) { const tick = pyRound(t * 960); tr.push(...vlq(Math.max(0, tick - last)), on ? 0x90 : 0x80, n, on ? v : 0); last = Math.max(last, tick); }
+  tr.push(0, 0xFF, 0x2F, 0);
+  const l = tr.length;
+  return Uint8Array.from([0x4D, 0x54, 0x68, 0x64, 0, 0, 0, 6, 0, 0, 0, 1, 0x01, 0xE0, 0x4D, 0x54, 0x72, 0x6B, l >>> 24, (l >> 16) & 255, (l >> 8) & 255, l & 255, ...tr]);
+}
+
+function songName(file) {
+  let s = file.replace(/\.(mid|midi)$/i, "").normalize("NFKD").replace(/[^\x00-\x7F]/g, "").replace(/_/g, " ");
+  s = Array.from(s).map((c) => (c.charCodeAt(0) >= 32 && c.charCodeAt(0) < 127 ? c : " ")).join("").trim().toUpperCase();
+  if (s.length > 3 && /^\d\d /.test(s)) s = s.slice(3);
+  return s.slice(0, 12) || "SONG";
+}
+function cleanName(s) { return Array.from(String(s).normalize("NFKD").replace(/[^\x20-\x7E]/g, "").toUpperCase()).join("").slice(0, 12); }
+
+/* the song bank: songs [{name, bytes, notes}] -> {hdr (420 B), data} */
+function buildBank(songs) {
+  let size = 0; for (const s of songs) size += s.bytes.length;
+  const data = new Uint8Array(size), hdr = new Uint8Array(420), dv = new DataView(hdr.buffer);
+  let off = 0; const ents = [];
+  for (const s of songs) { data.set(s.bytes, off); ents.push([off, s.notes.length, (cleanName(s.name) || "SONG")]); off += s.bytes.length; }
+  dv.setUint32(0, SONG_MAGIC, true); dv.setUint16(4, 1, true); dv.setUint16(6, ents.length, true);
+  dv.setUint32(8, data.length, true); dv.setUint32(12, crc32(data), true); dv.setUint32(16, 0, true);
+  ents.forEach(([o, n, nm], i) => { const q = 20 + i * 20; dv.setUint32(q, o, true); dv.setUint32(q + 4, n, true); for (let j = 0; j < 12; j++) hdr[q + 8 + j] = j < nm.length ? nm.charCodeAt(j) : 0; });
+  return { hdr, data };
+}
+/* the bank as read back (512-byte header area, then the data) -> songs */
+function parseBank(head, readData) {
+  const dv = new DataView(head.buffer, head.byteOffset);
+  if (dv.getUint32(0, true) !== SONG_MAGIC || dv.getUint16(4, true) !== 1) return null;
+  const count = dv.getUint16(6, true), len = dv.getUint32(8, true), crc = dv.getUint32(12, true);
+  if (!count || count > SONG_MAX || len > SONG_ROOM) return null;
+  const ents = [];
+  for (let i = 0; i < count; i++) {
+    const q = 20 + i * 20; let nm = "";
+    for (let j = 0; j < 12 && head[q + 8 + j]; j++) nm += String.fromCharCode(head[q + 8 + j]);
+    ents.push({ off: dv.getUint32(q, true), n: dv.getUint32(q + 4, true), name: nm });
+  }
+  return { count, len, crc, ents, finish(data) {
+    if (crc32(data) !== crc) return null;
+    return ents.map((e, i) => { const end = i + 1 < ents.length ? ents[i + 1].off : len, bytes = data.slice(e.off, end); return { name: e.name, bytes, notes: decodePiece(bytes, e.n) }; });
+  } };
+}
+/* the sketch area (sectors in use) -> [{num, j, name, notes}] (name "" = none: "CROQUIS n") */
+function parseSketches(area, used) {
+  const out = []; let s = 0;
+  while (s < used) {
+    const dv = new DataView(area.buffer, area.byteOffset + s * 4096);
+    const magic = dv.getUint32(0, true), nsect = dv.getUint16(4, true), num = dv.getUint16(6, true), notes = dv.getUint32(8, true), len = dv.getUint32(12, true);
+    const crc = dv.getUint32(20, true), flags = dv.getUint32(24, true);
+    let body = area.slice(s * 4096 + 32, s * 4096 + 32 + len);
+    if (magic !== SK_MAGIC || !nsect || crc32(body) !== crc) break;
+    let name = "";
+    if (flags === SK_NAMED) {
+      for (let k = 0; k < SK_NAME && body[k]; k++) name += String.fromCharCode(body[k]);
+      name = name.trim(); body = body.slice(SK_NAME);
+    }
+    out.push({ num, j: out.length, name, bytes: body, notes: decodePiece(body, notes) });
+    s += nsect;
+  }
+  return out;
+}
+
+/* a .zip, stored (no compression): files [{name, data}] */
+function makeZip(files) {
+  const parts = [], central = []; let off = 0;
+  const le = (v, n) => { const a = []; for (let i = 0; i < n; i++) a.push((v >>> (8 * i)) & 255); return a; };
+  for (const f of files) {
+    const nm = Array.from(new TextEncoder().encode(f.name)), c = crc32(f.data), sz = f.data.length;
+    const lh = [0x50, 0x4B, 3, 4, 20, 0, 0, 0, 0, 0, 0, 0x21, 0x21, 0x5A, ...le(c, 4), ...le(sz, 4), ...le(sz, 4), ...le(nm.length, 2), 0, 0, ...nm];
+    parts.push(Uint8Array.from(lh), f.data);
+    central.push(Uint8Array.from([0x50, 0x4B, 1, 2, 20, 0, 20, 0, 0, 0, 0, 0, 0, 0x21, 0x21, 0x5A, ...le(c, 4), ...le(sz, 4), ...le(sz, 4), ...le(nm.length, 2), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...le(off, 4), ...nm]));
+    off += lh.length + sz;
+  }
+  const cl = central.reduce((a, c) => a + c.length, 0);
+  const end = Uint8Array.from([0x50, 0x4B, 5, 6, 0, 0, 0, 0, ...le(files.length, 2), ...le(files.length, 2), ...le(cl, 4), ...le(off, 4), 0, 0]);
+  return new Blob([...parts, ...central, end], { type: "application/zip" });
+}
+if (typeof module !== "undefined") module.exports = { pack7, unpack7, crc32, pyRound, encodePiece, decodePiece, readMid, writeMid, songName, buildBank, parseBank, parseSketches, makeZip, SONG_DATA };
+</script>
+
+<script>
+"use strict";
+/* ------------------------------------------------------------------ words */
+const T = {
+  fr: {
+    title: "Carnet", tagline: "les morceaux du magnéto, les croquis du carnet", connect: "Connecter", disconnect: "Déconnecter",
+    songs: "Morceaux", songsSub: "Ce que le magnéto joue. Tout ce que tu fais ici va directement sur le FM-1 : ajoute des .mid, range, renomme, efface.",
+    sketches: "Croquis", skSub: "Ce que tu as gardé avec REC. Clique un nom pour le changer, écoute, exporte en MIDI, ou fais-en un morceau.",
+    drop: "Dépose des fichiers MIDI ici, ou clique pour en choisir", reload: "Relire",
+    exportAll: "Tout exporter (.zip)", clearAll: "Tout effacer",
+    syncOk: "✓ Sur le FM-1", syncWait: "Envoi au FM-1 dans un instant…", syncing: (p) => `Envoi au FM-1… ${p} %`,
+    syncOff: "Connecte le FM-1 pour voir et changer ses morceaux.", syncFail: "Pas envoyé : réessaie (Relire annule les changements).",
+    off: "pas connecté", on: "connecté", nomidi: "Ce navigateur n'a pas Web MIDI : ouvre la page dans Chrome ou Edge.",
+    denied: "Accès MIDI refusé. Autorise MIDI (avec SysEx) pour cette page dans Chrome.",
+    noport: "Pas de port « Felucca » : branche le FM-1 en USB, avec Modular One, et ferme les autres apps MIDI.",
+    timeout: "Le FM-1 ne répond pas. Modular One 0.2 est-il installé ?", old: "Ce firmware ne sait pas encore faire ça : mets Modular One à jour.",
+    noSongs: "Aucun morceau. Dépose des fichiers MIDI ci-dessous.", noSketches: "Aucun croquis. Sur le FM-1, maintiens REC après avoir joué une phrase.",
+    offline: "Connecte le FM-1 pour voir ses croquis.",
+    notes: "notes", play: "Écouter", stop: "Stop", export: "Exporter en .mid", remove: "Retirer de la liste", erase: "Effacer du FM-1",
+    toSong: "En faire un morceau", rename: "Renommer (12 lettres, sur le FM-1 aussi)", renaming: "Renommage…",
+    noRoom: "Pas de place pour un nom dans ce croquis (il remplit ses secteurs).", up: "Monter", down: "Descendre", fromFm1: "FM-1", fromFile: "nouveau",
+    reading: "Lecture du FM-1…", sending: "Envoi des morceaux…", erasing: "Effacement…",
+    sent: "Morceaux envoyés", cleared: "Morceaux effacés du FM-1", erased: "effacé", allErased: "Croquis effacés",
+    confirmErase: (n) => `Effacer ${n} du FM-1 ? Les croquis suivants descendent, ils gardent leur numéro.`,
+    confirmClear: "Effacer TOUS les croquis du FM-1 ?", confirmClearSongs: "Effacer TOUS les morceaux du FM-1 ?",
+    confirmRemove: (n) => `Effacer « ${n} » du FM-1 ?`, confirmLeave: "Des changements ne sont pas encore sur le FM-1.",
+    tooMany: `${SONG_MAX} morceaux au maximum`, tooBig: "Plus de place pour les morceaux", added: (n) => `${n} morceau(x) ajouté(s)`,
+    bad: (f, e) => `${f} : ${e}`, used: (a, b) => `${a} sur ${b} Kio`, count: (a, b) => `${a} / ${b}`, sect: (a, b) => `${a} secteurs sur ${b}`,
+    help: `<b>Comment ça marche.</b> Ouvre cette page dans <b>Chrome</b> (ou Edge), branche le FM-1 en USB avec Modular One, clique <b>Connecter</b> et autorise le MIDI.
+      <ul><li><b>Morceaux</b> : la liste est celle du FM-1, et chaque changement y part tout seul. Ajoute des .mid, glisse pour changer l'ordre, clique un nom pour le renommer (12 lettres), ✕ pour en effacer un. Tous les canaux d'un fichier jouent sur le son de la piste choisie (8 voix).</li>
+      <li><b>Croquis</b> : écoute-les ici, exporte-les en .mid (120 BPM) pour ton logiciel, ou passe-les dans les morceaux avec la flèche.</li>
+      <li>Pendant un envoi ou un effacement, le magnéto du FM-1 s'arrête une seconde : c'est normal.</li></ul>`,
+  },
+  en: {
+    title: "Sketchbook", tagline: "the tape player's songs, the sketchbook's sketches", connect: "Connect", disconnect: "Disconnect",
+    songs: "Songs", songsSub: "What the tape player plays. Everything you do here goes straight to the FM-1: add .mid files, order, rename, erase.",
+    sketches: "Sketches", skSub: "What you kept with REC. Click a name to change it, listen, export as MIDI, or turn one into a song.",
+    drop: "Drop MIDI files here, or click to choose", reload: "Reload",
+    exportAll: "Export all (.zip)", clearAll: "Erase all",
+    syncOk: "✓ On the FM-1", syncWait: "Sending to the FM-1 in a moment…", syncing: (p) => `Sending to the FM-1… ${p} %`,
+    syncOff: "Connect the FM-1 to see and change its songs.", syncFail: "Not sent: try again (Reload drops the changes).",
+    off: "not connected", on: "connected", nomidi: "This browser has no Web MIDI: open the page in Chrome or Edge.",
+    denied: "MIDI access refused. Allow MIDI (with SysEx) for this page in Chrome.",
+    noport: "No “Felucca” port: connect the FM-1 by USB, running Modular One, and close other MIDI apps.",
+    timeout: "The FM-1 does not answer. Is Modular One 0.2 installed?", old: "This firmware cannot do that yet: update Modular One.",
+    noSongs: "No songs. Drop MIDI files below.", noSketches: "No sketches. On the FM-1, hold REC after playing a phrase.",
+    offline: "Connect the FM-1 to see its sketches.",
+    notes: "notes", play: "Listen", stop: "Stop", export: "Export as .mid", remove: "Remove from the list", erase: "Erase from the FM-1",
+    toSong: "Make it a song", rename: "Rename (12 letters, on the FM-1 too)", renaming: "Renaming…",
+    noRoom: "No room for a name in this sketch (it fills its sectors).", up: "Up", down: "Down", fromFm1: "FM-1", fromFile: "new",
+    reading: "Reading the FM-1…", sending: "Sending the songs…", erasing: "Erasing…",
+    sent: "Songs sent", cleared: "Songs erased from the FM-1", erased: "erased", allErased: "Sketches erased",
+    confirmErase: (n) => `Erase ${n} from the FM-1? The sketches after it move down and keep their numbers.`,
+    confirmClear: "Erase EVERY sketch on the FM-1?", confirmClearSongs: "Erase EVERY song on the FM-1?",
+    confirmRemove: (n) => `Erase “${n}” from the FM-1?`, confirmLeave: "Some changes are not on the FM-1 yet.",
+    tooMany: `${SONG_MAX} songs at most`, tooBig: "No room left for songs", added: (n) => `${n} song(s) added`,
+    bad: (f, e) => `${f}: ${e}`, used: (a, b) => `${a} of ${b} KiB`, count: (a, b) => `${a} / ${b}`, sect: (a, b) => `${a} of ${b} sectors`,
+    help: `<b>How it works.</b> Open this page in <b>Chrome</b> (or Edge), connect the FM-1 by USB running Modular One, click <b>Connect</b> and allow MIDI.
+      <ul><li><b>Songs</b>: the list is the FM-1's, and every change goes there by itself. Add .mid files, drag to reorder, click a name to rename it (12 letters), ✕ to erase one. Every channel of a file plays on the selected part's sound (8 voices).</li>
+      <li><b>Sketches</b>: listen here, export as .mid (120 BPM) for your DAW, or move one into the songs with the arrow.</li>
+      <li>While sending or erasing, the FM-1's tape player stops for a second: that's normal.</li></ul>`,
+  },
+};
+let lang = (() => { try { return localStorage.getItem("m1lang") || (navigator.language || "fr").slice(0, 2); } catch { return "fr"; } })();
+if (!T[lang]) lang = "en";
+const t = (k, ...a) => { const v = T[lang][k]; return typeof v === "function" ? v(...a) : v; };
+
+/* ------------------------------------------------------------------ the link */
+const DEMO = /[?&]demo\b/.test(location.search);
+let link = null;
+class Link {
+  constructor(input, output) { this.i = input; this.o = output; this.wait = null; this.q = Promise.resolve(); input.onmidimessage = (e) => this.rx(e.data); }
+  rx(d) {
+    if (!this.wait || d[0] !== 0xF0 || d[1] !== HDR[0] || d[2] !== HDR[1] || d[3] !== HDR[2] || d[4] !== this.wait.cmd) return;
+    const w = this.wait; this.wait = null; clearTimeout(w.to); w.ok(Array.from(d.slice(5, d.length - 1)));
+  }
+  req(cmd, args = [], ms = 3000) {
+    const run = () => new Promise((ok, no) => {
+      this.wait = { cmd, ok, to: setTimeout(() => { this.wait = null; no(new Error("timeout")); }, ms) };
+      this.o.send([0xF0, ...HDR, cmd, ...args, 0xF7]);
+    });
+    const p = this.q.then(run, run);
+    this.q = p.catch(() => {});
+    return p;
+  }
+  close() { this.i.onmidimessage = null; }
+}
+const o3 = (v) => [v & 0x7F, (v >> 7) & 0x7F, (v >> 14) & 0x7F];
+
+/* ------------------------------------------------------------------ state */
+let songs = [];           /* [{id, name, bytes, notes, src: "fm1" | "file"}] */
+let sketches = null;      /* null: not read; [{num, j, bytes, notes}] */
+let skUsed = 0, dirty = false, nextId = 1;
+const $ = (id) => document.getElementById(id);
+
+function toast(msg, err) { const el = $("toast"); el.textContent = msg; el.className = "on" + (err ? " err" : ""); clearTimeout(toast.t); toast.t = setTimeout(() => (el.className = ""), err ? 5200 : 2600); }
+function busy(msg, frac) { $("progress").className = msg ? "progress on" : "progress"; if (msg) { $("progText").textContent = msg; $("progBar").style.width = Math.round((frac || 0) * 100) + "%"; } }
+function fmtTime(s) { s = Math.round(s); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`; }
+/* the songs are the FM-1's: a change is sent by itself (the whole bank: SONG_BEGIN, WRITE, END), right away or,
+ * for moves and renames, after a short pause so several go at once. A change during a send: sent after it. */
+let syncTimer = null, syncing = false, syncPct = 0, syncFailed = false;
+function changed(delay = 0) {
+  dirty = true; syncFailed = false; renderSongs();
+  clearTimeout(syncTimer); syncTimer = setTimeout(syncSongs, delay);
+}
+function renderSync() {
+  const el = $("syncState");
+  el.className = "note sync" + (syncing || dirty || !link ? " wait" : "");
+  el.textContent = !link ? t("syncOff") : syncing ? t("syncing", syncPct) : syncFailed ? t("syncFail") : dirty ? t("syncWait") : t("syncOk");
+}
+function download(blob, name) { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); }
+function fileSafe(s) { return s.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || "piece"; }
+function skName(k) { return k.name || `CROQUIS ${k.num}`; }
+
+/* ------------------------------------------------------------------ reading, writing */
+async function readSongs() {
+  const head = new Uint8Array(512);
+  for (let off = 0; off < 512; off += 256) { const r = await link.req(CMD.SONG_READ, o3(off)); head.set(unpack7(r.slice(3)).slice(0, 256), off); }
+  const bank = parseBank(head);
+  if (!bank) return [];
+  const data = new Uint8Array(Math.ceil(bank.len / 256) * 256);
+  for (let off = 0; off < bank.len; off += 256) {
+    busy(t("reading"), off / bank.len * 0.5);
+    const r = await link.req(CMD.SONG_READ, o3(SONG_DATA + off)); data.set(unpack7(r.slice(3)).slice(0, 256), off);
+  }
+  return bank.finish(data.slice(0, bank.len)) || [];
+}
+async function readSketches() {
+  const info = await link.req(CMD.SK_INFO); skUsed = info[1];
+  const area = new Uint8Array(skUsed * 4096);
+  for (let off = 0; off < area.length; off += 256) {
+    busy(t("reading"), 0.5 + off / area.length * 0.5);
+    const r = await link.req(CMD.SK_READ, o3(off)); area.set(unpack7(r.slice(3)).slice(0, 256), off);
+  }
+  return parseSketches(area, skUsed);
+}
+async function refresh(what = "both") {
+  try {
+    busy(t("reading"), 0);
+    if (what !== "sk") {
+      try { songs = (await readSongs()).map((s) => ({ ...s, id: nextId++, src: "fm1" })); }
+      catch (e) { if (e.message === "timeout") { songs = []; toast(t("old"), true); } else throw e; }
+      dirty = false; syncFailed = false;
+    }
+    if (what !== "songs") sketches = await readSketches();
+    renderAll();
+  } catch (e) { toast(e.message === "timeout" ? t("timeout") : e.message, true); }
+  busy();
+}
+
+async function syncSongs() {
+  syncTimer = null;
+  if (!link || syncing || !dirty) return;
+  const count = songs.length, { hdr, data } = buildBank(songs);   /* (a snapshot: the list may change while it goes) */
+  if (data.length > SONG_ROOM) { toast(t("tooBig"), true); syncFailed = true; renderSync(); return; }
+  syncing = true; dirty = false; syncPct = 0; renderSync();
+  try {
+    let r = await link.req(CMD.SONG_BEGIN, [], 6000);
+    if (r[0]) throw new Error("begin " + r[0]);
+    if (count) {                                     /* none: SONG_BEGIN alone leaves the FM-1 without songs */
+      for (let off = 0; off < data.length; off += 256) {
+        syncPct = Math.round(off / data.length * 100); renderSync();
+        r = await link.req(CMD.SONG_WRITE, [...o3(SONG_DATA + off), ...pack7(Array.from(data.slice(off, off + 256)))], 4000);
+        if (r[3]) throw new Error(`write ${SONG_DATA + off}: ${r[3]}`);
+      }
+      r = await link.req(CMD.SONG_END, pack7(Array.from(hdr)), 6000);
+      if (r[0]) throw new Error("end " + r[0]);
+    }
+  } catch (e) {
+    dirty = true; syncFailed = true;
+    toast(e.message === "timeout" ? t("timeout") : e.message, true);
+  }
+  syncing = false;
+  if (dirty && !syncFailed) syncSongs(); else renderSync();
+}
+
+async function eraseSketch(k) {
+  if (!confirm(t("confirmErase", skName(k)))) return;
+  stopPreview();
+  try {
+    busy(t("erasing"), 0.3);
+    const r = await link.req(CMD.SK_ERASE, [k.j], 15000);
+    if (r[0]) throw new Error("erase " + r[0]);
+    toast(`${skName(k)} ${t("erased")}`);
+    await refresh("sk");
+  } catch (e) { busy(); toast(e.message === "timeout" ? t("old") : e.message, true); }
+}
+async function renameSketch(k, name) {
+  name = cleanName(name).trim();
+  if (name === (k.name || "") || name === `CROQUIS ${k.num}`) return;
+  stopPreview();
+  try {
+    busy(t("renaming"), 0.4);
+    const r = await link.req(CMD.SK_RENAME, [k.j, ...Array.from(name).map((c) => c.charCodeAt(0) & 0x7F), 0], 10000);
+    if (r[0] === 4) throw new Error(t("noRoom"));
+    if (r[0]) throw new Error("rename " + r[0]);
+    await refresh("sk");
+  } catch (e) { busy(); toast(e.message === "timeout" ? t("old") : e.message, true); renderSketches(); }
+}
+async function clearSketches() {
+  if (!confirm(t("confirmClear"))) return;
+  stopPreview();
+  try { busy(t("erasing"), 0.5); const r = await link.req(CMD.SK_CLEAR, [], 15000); if (r[0]) throw new Error("clear " + r[0]); toast(t("allErased")); await refresh("sk"); }
+  catch (e) { busy(); toast(e.message === "timeout" ? t("timeout") : e.message, true); }
+}
+
+/* ------------------------------------------------------------------ files in */
+async function addFiles(files) {
+  if (!link) { toast(t("syncOff"), true); return; }
+  let n = 0;
+  for (const f of files) {
+    if (!/\.midi?$/i.test(f.name)) continue;
+    if (songs.length >= SONG_MAX) { toast(t("tooMany"), true); break; }
+    try {
+      const notes = readMid(await f.arrayBuffer());
+      songs.push({ id: nextId++, name: songName(f.name), notes, bytes: encodePiece(notes), src: "file" }); n++;
+    } catch (e) { toast(t("bad", f.name, e.message), true); }
+  }
+  if (n) { changed(0); toast(t("added", n)); }
+}
+
+/* ------------------------------------------------------------------ the preview: a small FM voice */
+let ac = null, pv = null;
+function stopPreview() {
+  if (!pv) return;
+  clearInterval(pv.timer); pv.out.gain.cancelScheduledValues(0); pv.out.gain.setTargetAtTime(0, ac.currentTime, 0.02);
+  const o = pv.out; setTimeout(() => o.disconnect(), 300);
+  pv = null; renderAll();
+}
+function preview(key, notes) {
+  const same = pv && pv.key === key;
+  stopPreview();
+  if (same) return;
+  ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+  ac.resume();
+  const out = ac.createGain(); out.gain.value = 0.22;
+  const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 5200;
+  out.connect(lp).connect(ac.destination);
+  const sorted = [...notes].sort((a, b) => a[0] - b[0]), t0 = ac.currentTime + 0.08, len = pieceLength(notes);
+  let i = 0;
+  const tick = () => {
+    const horizon = ac.currentTime + 0.3;
+    while (i < sorted.length && t0 + sorted[i][0] < horizon) {
+      const [s, n, v, d] = sorted[i++], at = t0 + s, f = 440 * Math.pow(2, (n - 69) / 12), g = (v / 127) ** 1.5 * 0.5;
+      const car = ac.createOscillator(), mod = ac.createOscillator(), mg = ac.createGain(), env = ac.createGain();
+      car.frequency.value = f; mod.frequency.value = f * 2;
+      mg.gain.setValueAtTime(f * 1.6, at); mg.gain.exponentialRampToValueAtTime(f * 0.15 + 1, at + 0.6);
+      env.gain.setValueAtTime(0, at); env.gain.linearRampToValueAtTime(g, at + 0.008);
+      env.gain.setTargetAtTime(g * 0.45, at + 0.01, 0.35);
+      env.gain.setTargetAtTime(0, at + Math.max(d, 0.05), 0.18);
+      mod.connect(mg).connect(car.frequency); car.connect(env).connect(out);
+      car.start(at); mod.start(at); car.stop(at + d + 1.2); mod.stop(at + d + 1.2);
+    }
+    if (pv && ac.currentTime > t0 + len + 1.3) stopPreview();
+  };
+  pv = { key, out, timer: setInterval(tick, 60) };
+  tick(); renderAll();
+}
+
+/* ------------------------------------------------------------------ render */
+function btn(label, title, fn, cls = "icon") { const b = document.createElement("button"); b.className = cls; b.textContent = label; b.title = title; b.setAttribute("aria-label", title); b.onclick = fn; return b; }
+let dragFrom = -1;
+function renderSongs() {
+  const ol = $("songs"); ol.innerHTML = "";
+  if (!songs.length) { const li = document.createElement("li"); li.className = "empty"; li.textContent = t("noSongs"); ol.appendChild(li); }
+  songs.forEach((s, i) => {
+    const li = document.createElement("li"); li.className = "row" + (pv && pv.key === "s" + s.id ? " playing" : ""); li.draggable = true;
+    li.ondragstart = (e) => { dragFrom = i; li.classList.add("drag"); e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", "row"); };
+    li.ondragend = () => { li.classList.remove("drag"); dragFrom = -1; };
+    li.ondragover = (e) => { if (dragFrom < 0) return; e.preventDefault(); li.classList.add("over"); };
+    li.ondragleave = () => li.classList.remove("over");
+    li.ondrop = (e) => { if (dragFrom < 0) return; e.preventDefault(); e.stopPropagation(); const [m] = songs.splice(dragFrom, 1); songs.splice(i, 0, m); changed(1200); };
+    const num = document.createElement("span"); num.className = "num handle"; num.textContent = String(i + 1).padStart(2, "0"); num.title = "⇅";
+    const nm = document.createElement("div"); nm.className = "name";
+    const inp = document.createElement("input"); inp.value = s.name; inp.maxLength = 12; inp.spellcheck = false; inp.setAttribute("aria-label", t("songs") + " " + (i + 1));
+    inp.oninput = () => { const c = cleanName(inp.value); if (c !== inp.value) inp.value = c; };
+    inp.onkeydown = (e) => { if (e.key === "Enter") inp.blur(); if (e.key === "Escape") { inp.value = s.name; inp.blur(); } };
+    inp.onchange = () => { const c = cleanName(inp.value).trim() || "SONG"; inp.value = c; if (c !== s.name) { s.name = c; changed(0); } };
+    inp.ondragstart = (e) => e.preventDefault();
+    const meta = document.createElement("div"); meta.className = "meta";
+    meta.textContent = `${fmtTime(pieceLength(s.notes))} · ${s.notes.length} ${t("notes")} · ${(s.bytes.length / 1024).toFixed(1)} KiB`;
+    nm.append(inp, meta);
+    const acts = document.createElement("div"); acts.className = "acts";
+    acts.append(
+      btn(pv && pv.key === "s" + s.id ? "■" : "▶", t(pv && pv.key === "s" + s.id ? "stop" : "play"), () => preview("s" + s.id, s.notes)),
+      btn("↑", t("up"), () => { if (i) { [songs[i - 1], songs[i]] = [songs[i], songs[i - 1]]; changed(1200); } }),
+      btn("↓", t("down"), () => { if (i < songs.length - 1) { [songs[i + 1], songs[i]] = [songs[i], songs[i + 1]]; changed(1200); } }),
+      btn("⤓", t("export"), () => download(new Blob([writeMid(s.notes, s.name)], { type: "audio/midi" }), `${String(i + 1).padStart(2, "0")}_${fileSafe(s.name)}.mid`)),
+      btn("✕", t("erase"), () => { if (!confirm(t("confirmRemove", s.name))) return; if (pv && pv.key === "s" + s.id) stopPreview(); songs.splice(i, 1); changed(0); }, "icon danger"));
+    li.append(num, nm, acts); ol.appendChild(li);
+  });
+  const bytes = songs.reduce((a, s) => a + s.bytes.length, 0), frac = bytes / SONG_ROOM;
+  $("songBar").className = "bar" + (frac > 1 ? " over" : ""); $("songBar").firstElementChild.style.width = Math.min(100, frac * 100) + "%";
+  $("songMeter").textContent = t("used", (bytes / 1024).toFixed(1), (SONG_ROOM / 1024).toFixed(0));
+  $("songCount").textContent = t("count", songs.length, SONG_MAX);
+  $("reloadSongs").disabled = !link || syncing; $("exportSongs").disabled = !songs.length; $("clearSongs").disabled = !link || !songs.length;
+  $("drop").style.display = link ? "" : "none";
+  renderSync();
+}
+function renderSketches() {
+  const ol = $("sketches"); ol.innerHTML = "";
+  const list = sketches || [];
+  if (!list.length) { const li = document.createElement("li"); li.className = "empty"; li.textContent = link ? t("noSketches") : t("offline"); ol.appendChild(li); }
+  list.forEach((k) => {
+    const li = document.createElement("li"); li.className = "row" + (pv && pv.key === "k" + k.num ? " playing" : "");
+    const num = document.createElement("span"); num.className = "num"; num.textContent = String(k.num).padStart(2, "0");
+    const nm = document.createElement("div"); nm.className = "name";
+    const inp = document.createElement("input"); inp.value = k.name; inp.placeholder = `CROQUIS ${k.num}`; inp.maxLength = 12; inp.spellcheck = false;
+    inp.title = t("rename"); inp.setAttribute("aria-label", t("rename")); inp.disabled = !link;
+    inp.oninput = () => { const c = cleanName(inp.value); if (c !== inp.value) inp.value = c; };
+    inp.onkeydown = (e) => { if (e.key === "Enter") inp.blur(); if (e.key === "Escape") { inp.value = k.name; inp.blur(); } };
+    inp.onchange = () => renameSketch(k, inp.value);
+    const meta = document.createElement("div"); meta.className = "meta";
+    meta.textContent = `${k.name ? `CROQUIS ${k.num} · ` : ""}${fmtTime(pieceLength(k.notes))} · ${k.notes.length} ${t("notes")}`;
+    nm.append(inp, meta);
+    const acts = document.createElement("div"); acts.className = "acts";
+    acts.append(
+      btn(pv && pv.key === "k" + k.num ? "■" : "▶", t(pv && pv.key === "k" + k.num ? "stop" : "play"), () => preview("k" + k.num, k.notes)),
+      btn("⤓", t("export"), () => download(new Blob([writeMid(k.notes, skName(k))], { type: "audio/midi" }), `croquis_${String(k.num).padStart(2, "0")}${k.name ? "_" + fileSafe(k.name) : ""}.mid`)),
+      btn("←", t("toSong"), () => {
+        if (songs.length >= SONG_MAX) { toast(t("tooMany"), true); return; }
+        songs.push({ id: nextId++, name: skName(k), notes: k.notes, bytes: encodePiece(k.notes), src: "file" }); changed(0); toast(t("added", 1));
+      }),
+      btn("✕", t("erase"), () => eraseSketch(k), "icon danger"));
+    li.append(num, nm, acts); ol.appendChild(li);
+  });
+  const frac = skUsed / SK_SECTORS;
+  $("skBar").firstElementChild.style.width = Math.min(100, frac * 100) + "%";
+  $("skMeter").textContent = sketches ? t("sect", skUsed, SK_SECTORS) : "";
+  $("skCount").textContent = sketches ? String(list.length) : "";
+  $("exportSk").disabled = !list.length; $("reloadSk").disabled = !link; $("clearSk").disabled = !link || !list.length;
+}
+function renderAll() { renderSongs(); renderSketches(); }
+function renderWords() {
+  document.documentElement.lang = lang;
+  document.querySelectorAll("[data-t]").forEach((el) => { const v = T[lang][el.dataset.t]; if (typeof v === "string") el.textContent = v; });
+  document.querySelectorAll("[data-lang]").forEach((a) => a.classList.toggle("on", a.dataset.lang === lang));
+  $("help").innerHTML = t("help");
+  $("connect").textContent = t(link ? "disconnect" : "connect");
+  $("statusText").textContent = link ? `${t("on")} · ${link.name}` : t("off");
+  $("dot").className = "dot" + (link ? " on" : "");
+  document.title = `Modular One ${t("title")}`;
+  renderAll();
+}
+
+/* ------------------------------------------------------------------ connect */
+let access = null;
+async function connect() {
+  if (link) {
+    if ((dirty || syncing) && !confirm(t("confirmLeave"))) return;
+    clearTimeout(syncTimer); link.close(); link = null; sketches = null; skUsed = 0; songs = []; dirty = false; renderWords(); return;
+  }
+  let input, output;
+  if (DEMO) ({ input, output } = demoDevice());
+  else {
+    if (!navigator.requestMIDIAccess) { toast(t("nomidi"), true); return; }
+    try { access = access || await navigator.requestMIDIAccess({ sysex: true }); } catch { toast(t("denied"), true); return; }
+    const isF = (p) => /felucca/i.test(p.name || "") && p.state !== "disconnected";
+    input = [...access.inputs.values()].find(isF); output = [...access.outputs.values()].find(isF);
+    if (!input || !output) { toast(t("noport"), true); return; }
+    access.onstatechange = (e) => { if (link && e.port.state === "disconnected" && /felucca/i.test(e.port.name || "")) { clearTimeout(syncTimer); link.close(); link = null; sketches = null; songs = []; dirty = false; syncing = false; renderWords(); toast(t("off"), true); } };
+  }
+  link = new Link(input, output); link.name = output.name || "Felucca";
+  for (let k = 0; k < 3; k++) { try { await link.req(CMD.INFO, [], 1000); break; } catch {} }   /* the first frame after opening can be lost */
+  renderWords();
+  await refresh();
+}
+
+/* ------------------------------------------------------------------ ?demo: a pretend FM-1 */
+function demoDevice() {
+  const flash = { song: new Uint8Array(SONG_SIZE).fill(255), sk: new Uint8Array(SK_SECTORS * 4096).fill(255) };
+  const mel = (seed, n, base) => { let x = seed; const r = () => (x = (x * 1103515245 + 12345) >>> 0) / 4294967296; const out = []; let tm = 0; const sc = [0, 2, 3, 5, 7, 8, 10, 12, 14, 15];
+    for (let i = 0; i < n; i++) { const d = [0.25, 0.5, 0.5, 0.75, 1][Math.floor(r() * 5)]; out.push([tm, base + sc[Math.floor(r() * sc.length)], 60 + Math.floor(r() * 50), d * 0.9]); if (r() < 0.3) out.push([tm, base - 12 + sc[Math.floor(r() * 5)], 50, d * 1.8]); tm += d; } return out; };
+  const wsk = (s, num, notes, name = "") => { const p = encodePiece(notes), b = new Uint8Array(SK_NAME + p.length); b.set(p, SK_NAME);
+    for (let k = 0; k < Math.min(SK_NAME, name.length); k++) b[k] = name.charCodeAt(k);
+    const ns = Math.ceil((32 + b.length) / 4096), dv = new DataView(flash.sk.buffer, s * 4096);
+    flash.sk.fill(255, s * 4096, (s + ns) * 4096); dv.setUint32(0, SK_MAGIC, true); dv.setUint16(4, ns, true); dv.setUint16(6, num, true); dv.setUint32(8, notes.length, true); dv.setUint32(12, b.length, true);
+    dv.setUint32(16, Math.round(pieceLength(notes) * 100), true); dv.setUint32(20, crc32(b), true); dv.setUint32(24, SK_NAMED, true); flash.sk.set(b, s * 4096 + 32); return s + ns; };
+  let s = 0; [[1, 24, 62, ""], [2, 40, 57, "PLUIE"], [4, 18, 64, ""], [5, 60, 55, ""]].forEach(([n, c, b, nm]) => (s = wsk(s, n, mel(n * 77, c, b), nm)));
+  const bank = buildBank([{ name: "NUIT", notes: mel(9, 90, 60) }, { name: "VELOURS", notes: mel(3, 60, 52) }].map((x) => ({ ...x, bytes: encodePiece(x.notes) })));
+  flash.song.set(bank.hdr, 0); flash.song.set(bank.data, SONG_DATA);
+  const scan = () => { const out = []; let q = 0; while (q < SK_SECTORS) { const dv = new DataView(flash.sk.buffer, q * 4096); if (dv.getUint32(0, true) !== SK_MAGIC) break; out.push([q, dv.getUint16(4, true)]); q += dv.getUint16(4, true); } return { list: out, used: q }; };
+  const input = { name: "Felucca (demo)", onmidimessage: null };
+  const reply = (cmd, a) => setTimeout(() => input.onmidimessage && input.onmidimessage({ data: Uint8Array.from([0xF0, ...HDR, cmd, ...a.map((x) => x & 0x7F), 0xF7]) }), 4);
+  const output = { name: "Felucca (demo)", send(d) {
+    const cmd = d[4], a = Array.from(d.slice(5, d.length - 1)), off = a[0] | a[1] << 7 | a[2] << 14;
+    switch (cmd) {
+      case CMD.INFO: return reply(cmd, [2, 0]);
+      case CMD.SONG_READ: case CMD.SK_READ: { const src = cmd === CMD.SK_READ ? flash.sk : flash.song; return reply(cmd, [...o3(off), ...pack7(Array.from(src.slice(off, off + 256)))]); }
+      case CMD.SK_INFO: { const sc = scan(); return reply(cmd, [sc.list.length, sc.used, SK_SECTORS, 4]); }
+      case CMD.SONG_BEGIN: flash.song.fill(255); return reply(cmd, [0]);
+      case CMD.SONG_WRITE: { const b = unpack7(a.slice(3)); flash.song.set(b, off); return reply(cmd, [...o3(off), 0]); }
+      case CMD.SONG_END: { const h = unpack7(a); flash.song.set(h.slice(0, 420), 0); return reply(cmd, [0]); }
+      case CMD.SK_CLEAR: flash.sk.fill(255); return setTimeout(() => reply(cmd, [0]), 300);
+      case CMD.SK_ERASE: case CMD.SK_RENAME: { const sc = scan(), j = a[0]; if (j >= sc.list.length) return reply(cmd, [1]);
+        let nm = ""; for (let k = 1; k < a.length && a[k] && k <= SK_NAME; k++) nm += String.fromCharCode(a[k]);
+        const all = parseSketches(flash.sk.slice(0, sc.used * 4096), sc.used);
+        if (cmd === CMD.SK_ERASE) all.splice(j, 1); else all[j].name = nm.toUpperCase();
+        flash.sk.fill(255); let q = 0; all.forEach((k) => (q = wsk(q, k.num, k.notes, k.name))); return setTimeout(() => reply(cmd, [0]), 300); }
+    }
+  } };
+  return { input, output };
+}
+
+/* ------------------------------------------------------------------ wiring */
+$("connect").onclick = connect;
+$("reloadSongs").onclick = () => { if (dirty && !confirm(t("confirmLeave"))) return; clearTimeout(syncTimer); refresh("songs"); };
+$("clearSongs").onclick = () => { if (!confirm(t("confirmClearSongs"))) return; stopPreview(); songs = []; changed(0); };
+$("reloadSk").onclick = () => refresh("sk");
+$("clearSk").onclick = clearSketches;
+$("exportSk").onclick = () => download(makeZip((sketches || []).map((k) => ({ name: `croquis_${String(k.num).padStart(2, "0")}${k.name ? "_" + fileSafe(k.name) : ""}.mid`, data: writeMid(k.notes, skName(k)) }))), "modular_one_croquis.zip");
+$("exportSongs").onclick = () => download(makeZip(songs.map((s, i) => ({ name: `${String(i + 1).padStart(2, "0")}_${fileSafe(s.name)}.mid`, data: writeMid(s.notes, s.name) }))), "modular_one_morceaux.zip");
+$("drop").onclick = () => $("file").click();
+$("file").onchange = (e) => { addFiles([...e.target.files]); e.target.value = ""; };
+{ /* files dropped anywhere on the songs (the drop zone is inside: one listener, or a file came in twice) */
+  const sec = $("songsSec");
+  sec.addEventListener("dragover", (e) => { if (dragFrom >= 0 || !e.dataTransfer.types.includes("Files")) return; e.preventDefault(); $("drop").classList.add("hot"); });
+  sec.addEventListener("dragleave", (e) => { if (!sec.contains(e.relatedTarget)) $("drop").classList.remove("hot"); });
+  sec.addEventListener("drop", (e) => { if (dragFrom >= 0 || !e.dataTransfer.files.length) return; e.preventDefault(); $("drop").classList.remove("hot"); addFiles([...e.dataTransfer.files]); });
+  document.addEventListener("dragover", (e) => { if (dragFrom < 0 && e.dataTransfer.types.includes("Files")) e.preventDefault(); });
+  document.addEventListener("drop", (e) => { if (dragFrom < 0 && !sec.contains(e.target)) e.preventDefault(); });   /* elsewhere: not opened as a page */
+}
+document.querySelectorAll("[data-lang]").forEach((a) => (a.onclick = () => { lang = a.dataset.lang; try { localStorage.setItem("m1lang", lang); } catch {} renderWords(); }));
+window.addEventListener("beforeunload", (e) => { if (dirty || syncing) { e.preventDefault(); e.returnValue = ""; } });
+renderWords();
+if (DEMO) connect();
+</script>
+</body>
+</html>

@@ -73,7 +73,7 @@ static const ev_t PLUCK[] = {{0.0f, 0.2f, {69}}, {0.25f, 0.2f, {72}}, {0.5f, 0.2
 static const ev_t TUNE[] = {{0.0f, 0.2f, {60}}, {0.25f, 0.2f, {64}}, {0.5f, 0.2f, {67}}, {0.75f, 0.4f, {69}},
                             {1.25f, 0.2f, {67}}, {1.5f, 0.2f, {64}}, {1.75f, 0.4f, {62}}, {2.25f, 0.2f, {60}},
                             {2.5f, 0.2f, {62}}, {2.75f, 0.9f, {64, 55}}};
-static const struct { const ev_t *e; uint32_t n; } PHRASE[MT_NFAM] = {{CHORDS, 1}, {KEYS, 3}};
+static const struct { const ev_t *e; uint32_t n; } PHRASE[MT_NFAM] = {{CHORDS, 1}, {KEYS, 3}, {BELLS, 6}, {BASS, 10}, {CHORDS, 1}};
 
 int main(int argc, char **argv)
 {
@@ -81,7 +81,7 @@ int main(int argc, char **argv)
     uint32_t fam, i, k, s;
     track_t *t = &trk[0];
     int32_t o[2 * CTL], peak = 0;
-    static const char *const FN[MT_NFAM] = {"1_souffles", "2_keys"};
+    static const char *const FN[MT_NFAM] = {"1_souffles", "2_keys", "3_lumieres", "4_ombres", "5_neon"};
     for (i = 0; i < G_COUNT; i++)
         song.g[i] = GP[i].def;
     for (k = 0; k < NTRK; k++) {

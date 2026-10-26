@@ -153,15 +153,17 @@ static void mt_render(track_t *t, voice_t *v, int32_t *out, uint32_t n, const vm
     v->s[4] = g;
 }
 
-/* Modular One: 16 presets, the sound of Modular Town, in 2 families of 8 (MT_FAM): the breath, the electric pianos.
+/* Modular One: 40 presets, the sound of Modular Town, in 5 families of 8 (MT_FAM): the breath, the soft
+ * electric pianos, the felted bells, the lows and the tension, the city at night (the CS-80 of the 80's films).
  * E = BRIL GRAIN TIMB CLOCH MONT NUIT ILE SUB, env = ATK DEC SUS REL (time index: 10000 ** (v / 127) ms),
- * fenv = ENV > BRIL, FX = DIST CHORUS DELAY REVERB sends, ARP = MODE RATE OCT GATE,
- * XT = VOICE (0 POLY 1 MONO 2 LEG 3 UNI) GLIDE, LFO RATE WAVE (SIN TRI SAW SQR S&H), LFO > BRIL, LFO > PITCH */
-#define MT_NFAM 2
-static const char *const MT_FAM[MT_NFAM] = {"SOUFFLES", "KEYS"};
-static const char *const MT_FAM3[MT_NFAM] = {"SOU", "KEY"};
+ * fenv = ENV > BRIL, mono, FX = DIST CHORUS DELAY REVERB sends, ARP = MODE RATE OCT GATE,
+ * XT = VOICE (0 POLY 1 MONO 2 LEG 3 UNI) GLIDE, LFO RATE WAVE (SIN TRI SAW SQR S&H), LFO > BRIL, LFO > PITCH
+ * TIMB: 0 1:1, 1 1:2, 2 1:3, 3 2:1, 4 2:3, 5 3:1, 6 1:.5, 7 .5:1, 8 1:3.5, 9 2:5, 10 1:5, 11 1:7 */
+#define MT_NFAM 5
+static const char *const MT_FAM[MT_NFAM] = {"SOUFFLES", "KEYS", "LUMIERES", "OMBRES", "NEON"};
+static const char *const MT_FAM3[MT_NFAM] = {"SOU", "KEY", "LUM", "OMB", "NEO"};
 static const preset_t MTFM_PRESETS[] = {
-    /* SOUFFLES: the breath (feedback grain, the low modulator, the night) */
+    /* SOUFFLES: the breath, slow and wide */
     {"SOUFFLE", {40, 60, 7, 0, 20, 40, 0, 0}, {110, 95, 127, 115}, 0, 0, FX(0, 25, 10, 60), PAT(5)},
     {"MAREE", {35, 70, 7, 0, 60, 60, 0, 20}, {120, 105, 127, 122}, 0, 0, FX(0, 30, 20, 90), PAT(5), XT(0, 0, 20, 0, 12, 0)},
     {"ZEPHYR", {48, 55, 7, 0, 30, 20, 0, 10}, {104, 92, 120, 110}, 0, 0, FX(0, 35, 15, 60), PAT(5), XT(0, 0, 40, 0, 6, 0)},
@@ -170,15 +172,42 @@ static const preset_t MTFM_PRESETS[] = {
     {"NUIT", {60, 50, 7, 0, 15, 110, 0, 0}, {100, 90, 110, 112}, 0, 0, FX(0, 15, 30, 60), PAT(5)},
     {"BRUINE", {44, 58, 7, 6, 25, 50, 0, 10}, {112, 98, 124, 118}, 0, 0, FX(0, 30, 25, 75), PAT(5), XT(0, 0, 28, 0, 8, 0)},
     {"CREPUSCULE", {52, 48, 6, 0, 35, 80, 0, 15}, {106, 95, 122, 118}, 0, 0, FX(0, 25, 20, 80), PAT(5)},
-    /* KEYS: soft electric pianos of the tine kind (M1 the body, M2 at 7x the tine, ENV > BRIL a gentle bark) */
-    {"VELOURS EP", {25, 15, 11, 0, 0, 30, 0, 10}, {0, 104, 45, 76}, 22, 0, FX(0, 45, 12, 35), PAT(6)},
-    {"SALON", {30, 15, 10, 0, 0, 35, 0, 0}, {0, 102, 40, 74}, 12, 0, FX(0, 40, 20, 45), PAT(6), XT(0, 0, 74, 0, 6, 0)},
-    {"LAMPE", {35, 40, 0, 0, 0, 50, 0, 0}, {0, 98, 50, 80}, 18, 0, FX(5, 40, 15, 45), PAT(6)},
-    {"FEUTRE", {26, 12, 11, 0, 0, 45, 0, 10}, {0, 100, 40, 80}, 15, 0, FX(0, 40, 10, 40), PAT(6)},
-    {"VEILLEUSE", {28, 25, 11, 2, 0, 60, 0, 0}, {0, 106, 40, 92}, 15, 0, FX(0, 30, 25, 60), PAT(6)},
-    {"COTON", {28, 18, 0, 0, 0, 40, 0, 10}, {0, 100, 45, 80}, 14, 0, FX(0, 50, 12, 40), PAT(6)},
-    {"BOUGIE", {30, 20, 11, 2, 0, 30, 0, 0}, {0, 100, 40, 76}, 18, 0, FX(0, 30, 15, 40), PAT(6), XT(0, 0, 84, 1, 10, 0)},
-    {"DIMANCHE", {32, 35, 11, 0, 15, 40, 0, 0}, {10, 104, 55, 95}, 15, 0, FX(0, 35, 20, 60), PAT(6)},
+    /* KEYS: soft electric pianos, round and dark (0.2: softer attacks, less grain) */
+    {"VELOURS EP", {22, 12, 11, 0, 0, 40, 0, 10}, {0, 104, 45, 76}, 16, 0, FX(0, 45, 12, 35), PAT(6)},
+    {"SALON", {26, 12, 10, 0, 0, 45, 0, 0}, {0, 102, 40, 74}, 10, 0, FX(0, 40, 20, 45), PAT(6), XT(0, 0, 74, 0, 6, 0)},
+    {"LAMPE", {28, 24, 0, 0, 0, 60, 0, 0}, {0, 98, 50, 80}, 12, 0, FX(0, 40, 15, 45), PAT(6)},
+    {"FEUTRE", {22, 10, 11, 0, 0, 55, 0, 10}, {0, 100, 40, 80}, 12, 0, FX(0, 40, 10, 40), PAT(6)},
+    {"VEILLEUSE", {24, 20, 11, 2, 0, 70, 0, 0}, {0, 106, 40, 92}, 12, 0, FX(0, 30, 25, 60), PAT(6)},
+    {"COTON", {24, 14, 0, 0, 0, 50, 0, 10}, {0, 100, 45, 80}, 10, 0, FX(0, 50, 12, 40), PAT(6)},
+    {"BOUGIE", {26, 16, 11, 2, 0, 40, 0, 0}, {0, 100, 40, 76}, 14, 0, FX(0, 30, 15, 40), PAT(6), XT(0, 0, 84, 1, 10, 0)},
+    {"DIMANCHE", {28, 24, 11, 0, 15, 50, 0, 0}, {10, 104, 55, 95}, 12, 0, FX(0, 35, 20, 60), PAT(6)},
+    /* LUMIERES: felted bells and plucks, for melodies and high ostinatos */
+    {"CELESTA", {36, 10, 2, 0, 0, 35, 0, 0}, {0, 100, 15, 90}, 16, 0, FX(0, 20, 15, 55), PAT(7)},
+    {"BOITE", {40, 8, 10, 4, 0, 30, 0, 0}, {0, 96, 0, 92}, 16, 0, FX(0, 15, 20, 60), PAT(7)},
+    {"HARPE", {32, 12, 1, 0, 0, 40, 0, 10}, {0, 98, 10, 86}, 12, 0, FX(0, 25, 10, 55), PAT(3)},
+    {"VERRE", {36, 6, 11, 8, 0, 50, 0, 0}, {4, 108, 10, 100}, 10, 0, FX(0, 30, 25, 75), PAT(7)},
+    {"VIBRA", {28, 10, 8, 0, 20, 45, 0, 10}, {0, 104, 25, 92}, 10, 0, FX(0, 35, 10, 50), PAT(6)},
+    {"KALIMBA", {34, 16, 10, 0, 0, 35, 0, 15}, {0, 96, 10, 84}, 18, 0, FX(0, 10, 10, 40), PAT(3)},
+    {"GLOCKEN", {42, 6, 9, 0, 0, 25, 0, 0}, {0, 104, 10, 94}, 12, 0, FX(0, 15, 15, 55), PAT(7)},
+    {"CARILLON", {38, 12, 11, -6, 0, 55, 1, 20}, {0, 112, 15, 104}, 10, 0, FX(0, 20, 30, 85), PAT(7)},
+    /* OMBRES: the lows, the pulse and the tension */
+    {"CONTRE", {22, 15, 0, 0, 0, 60, 0, 60}, {10, 95, 70, 80}, 6, 1, FX(0, 0, 0, 20), PAT(8)},
+    {"PULSE", {38, 28, 6, 0, 0, 45, 0, 40}, {0, 85, 20, 70}, 16, 0, FX(0, 10, 35, 30), PAT(2)},
+    {"ABYSSE", {30, 40, 7, 0, 30, 90, 0, 70}, {118, 110, 127, 115}, 0, 0, FX(0, 20, 10, 70), PAT(8), XT(0, 0, 10, 0, 10, 0)},
+    {"VIOLONC", {44, 30, 0, 0, 40, 55, 0, 20}, {95, 95, 110, 100}, 0, 0, FX(0, 25, 10, 55), PAT(8), XT(0, 0, 70, 0, 0, 3)},
+    {"CUIVRE", {48, 20, 0, 0, 30, 60, 0, 10}, {92, 100, 110, 96}, 14, 0, FX(0, 20, 10, 60), PAT(5)},
+    {"TREMOLO", {36, 32, 3, 0, 0, 60, 0, 30}, {80, 100, 120, 100}, 0, 0, FX(0, 15, 10, 50), PAT(8), XT(0, 0, 96, 0, 25, 0)},
+    {"RUMEUR", {28, 70, 7, 12, 0, 100, 0, 60}, {110, 110, 127, 118}, 0, 0, FX(8, 20, 20, 70), PAT(8), XT(0, 0, 20, 4, 12, 0)},
+    {"NOCTURNE", {34, 45, 6, 0, 25, 110, 1, 40}, {112, 105, 127, 115}, 0, 0, FX(0, 30, 25, 80), PAT(5)},
+    /* NEON: the city at night, the CS-80 of the 80's films (brass that swells, wide pads, vibrato) */
+    {"HORIZON", {60, 32, 0, 2, 40, 25, 0, 10}, {98, 105, 115, 104}, 18, 0, FX(0, 45, 15, 90), PAT(5), XT(0, 0, 62, 0, 0, 2)},
+    {"LARMES", {46, 40, 0, 3, 50, 40, 1, 0}, {104, 100, 120, 110}, 8, 0, FX(0, 50, 20, 85), PAT(5), XT(0, 0, 58, 0, 0, 3)},
+    {"BLUES", {42, 30, 1, 0, 40, 40, 0, 0}, {60, 100, 110, 96}, 12, 1, FX(0, 30, 35, 70), PAT(4), XT(2, 40, 62, 0, 0, 4)},
+    {"PLUIE", {46, 8, 11, 10, 0, 35, 1, 0}, {0, 106, 5, 104}, 16, 0, FX(0, 25, 55, 95), PAT(7)},
+    {"NEON", {50, 26, 4, 5, 30, 30, 0, 0}, {100, 104, 120, 110}, 10, 0, FX(0, 70, 20, 90), PAT(5), XT(0, 0, 40, 1, 8, 0)},
+    {"BRUME", {30, 55, 7, 0, 20, 90, 1, 30}, {115, 110, 127, 118}, 0, 0, FX(0, 40, 25, 95), PAT(5), XT(0, 0, 12, 0, 14, 0)},
+    {"PYRAMIDE", {60, 30, 6, 0, 30, 40, 0, 50}, {90, 105, 115, 104}, 16, 0, FX(0, 30, 10, 85), PAT(8)},
+    {"ECHO", {44, 12, 2, 0, 0, 30, 0, 0}, {0, 100, 20, 96}, 14, 0, FX(0, 20, 80, 80), PAT(7)},
 };
 
 static const engine_t ENG_TOWN = {

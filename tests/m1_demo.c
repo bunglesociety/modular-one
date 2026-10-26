@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #define __attribute__(x)
+#define M1_GYMNO                  /* the player starts with the Gymnopedie (seq.c) */
 #define memset felucca_memset
 #define memcpy felucca_memcpy
 #define memcmp felucca_memcmp
@@ -72,6 +73,8 @@ int main(int argc, char **argv)
         demo_req = (uint8_t)(argc > 3 ? atoi(argv[3]) : 1);
         for (s = 0; s < maxs; s += CTL) {
             mix_block(o, CTL);
+            if (s > FS && demo_on && pl_wait && !ended && demo_req != 2)
+                demo_req = 2;            /* the piece is over (the player would loop): stop */
             if (s > FS && !demo_on && !ended)
                 ended = s;
             if (ended && s > ended + 8u * FS)

@@ -278,7 +278,7 @@ static void ui_input(void)
 {
     uint32_t pressed = fm1_input_edges(0), notes = fm1_input_note_edges(), now = fm1_ticks(), id, b, k, fam = cur_fam();
     uint32_t home = btn_hold(&ui.home_t0, B_HOME, now, 1);
-    uint32_t rec = btn_hold(&ui.rec_t0, B_REC, now, !ui.menu && (fam == FAM_SEQ || fam == FAM_ARP || fam == FAM_TRK));
+    uint32_t rec = btn_hold(&ui.rec_t0, B_REC, now, !ui.menu);   /* (held on SEQ / ARP / TRACKS: clear; elsewhere: keep a sketch) */
     int32_t s;
     if (home == BT_HOLD) {                              /* HOME held: open the menu, or leave it */
         if (ui.menu) {
@@ -307,11 +307,92 @@ static void ui_input(void)
             demo_t0 = (now | 1u) & ~2u;
         } else if (!(demo_t0 & 2u) && now - (demo_t0 & ~3u) > 1200u * 1000u * FM1_TICKS_PER_US) {
             demo_t0 |= 2u;
-            demo_req = demo_on ? 2u : 1u;
-            ui_message(demo_on ? "DEMO STOP" : "SATIE GYMNOPEDIE 1");
+            if (demo_on) {
+                demo_req = 2u;
+                ui_message("PLAYER STOP");
+            } else if (!pl_count) {
+                ui_message("NO SONG, NO SKETCH");
+            } else {
+                demo_req = 1u;
+                pl_cursor = 0;
+                pl_pick_ms = 0;
+            }
         }
     }
-    if (rec == BT_HOLD) {                               /* REC held on SEQ / ARP: "clear the sequence?", */
+    {   /* the player: OCT+ next piece, OCT- back to the start, OCT- twice the previous one. On release,
+         * and only for a lone button (OCT- + OCT+ together is start / stop, above) */
+        static uint8_t oct_prev, oct_both;
+        static uint32_t oct_dn_ms, shown;
+        uint32_t oc = ((fm1_in.buttons >> panel.btn[B_OCTDN]) & 1u) | ((fm1_in.buttons >> panel.btn[B_OCTUP]) & 1u) << 1;
+        if (oc == 3u)
+            oct_both = 1;
+        if (oct_prev && !oc) {
+            if (!oct_both && demo_on) {
+                if (pl_del) {                           /* "erase?": OCT- or OCT+ says no */
+                    pl_del = 0;
+                } else if (oct_prev & 2u) {
+                    demo_req = 3;
+                } else if (oct_dn_ms && fm1_ms - oct_dn_ms < 450u) {
+                    demo_req = 5;
+                    oct_dn_ms = 0;
+                } else {
+                    demo_req = 4;
+                    oct_dn_ms = fm1_ms;
+                }
+            }
+            oct_both = 0;
+        }
+        oct_prev = (uint8_t)oc;
+        if (shown != pl_shown) {                        /* a piece starts: the list follows it */
+            shown = pl_shown;
+            if (!pl_pick_ms)
+                pl_cursor = pl_idx;
+        }
+        if (demo_on) {                                  /* KNOB 1: the list pops up (the first click only shows it); */
+            int32_t st = panel_enc(EN_K1);              /* the choice plays when the knob rests 0.8 s */
+            if (st && pl_count) {
+                if (pl_list_ms && fm1_ms - pl_list_ms < PL_LIST_MS) {
+                    pl_cursor = (uint8_t)clamp((int32_t)pl_cursor + (st > 0 ? 1 : -1), 0, (int32_t)pl_count - 1);
+                    pl_pick_ms = (fm1_ms ? fm1_ms : 1u);
+                } else {
+                    pl_cursor = pl_idx;
+                }
+                pl_list_ms = (fm1_ms ? fm1_ms : 1u);
+            }
+            if (pl_del && (fm1_ms - pl_del_ms > 4000u || st || pl_cursor + 1u != pl_del))
+                pl_del = 0;                             /* "erase?" lapses: 4 s, or the knob moved */
+            if (pl_list_ms && ((fm1_in.buttons >> panel.btn[B_REC]) & 1u || pl_del))
+                pl_list_ms = (fm1_ms ? fm1_ms : 1u);               /* the list stays up while REC is down or "erase?"
+                                                         * (the stamp is never ahead of fm1_ms: it was fm1_ms | 1) */
+            if (pl_list_ms && fm1_ms - pl_list_ms >= PL_LIST_MS)
+                pl_list_ms = 0;
+            if (pl_pick_ms && fm1_ms - pl_pick_ms > 800u) {
+                pl_pick_ms = 0;
+                if (pl_cursor != pl_idx) {
+                    pl_target = pl_cursor;
+                    demo_req = 6;
+                }
+            }
+        } else {
+            pl_pick_ms = 0;
+            pl_list_ms = 0;
+            pl_del = 0;
+        }
+    }
+    if (rec == BT_HOLD && demo_on && pl_list_ms) {      /* REC held in the player's list: erase the sketch? */
+        if (pl_cursor < pl_songs) {
+            ui_message("SONGS: FROM THE COMPUTER");
+        } else if (pl_del == pl_cursor + 1u) {          /* held again: erase it */
+            m1_del_req = (uint8_t)(pl_cursor + 1u);
+            pl_del = 0;
+            pl_list_ms = 0;
+        } else {
+            pl_del = (uint8_t)(pl_cursor + 1u);
+            pl_del_ms = fm1_ms;
+        }
+    } else if (rec == BT_HOLD && fam != FAM_SEQ && fam != FAM_ARP && fam != FAM_TRK) {
+        m1_keep_req = 1;                                /* REC held elsewhere: keep the last phrase (m1_book.c) */
+    } else if (rec == BT_HOLD) {                        /* REC held on SEQ / ARP: "clear the sequence?", */
         ui.confirm = fam == FAM_TRK ? 2 : 1;            /* on TRACKS "clear track n?" (the selected one) */
         ui.confirm_trk = song.sel;
         ui.force = 1;
@@ -364,6 +445,8 @@ static void ui_input(void)
         case B_OCTDN:
         case B_OCTUP: {
             uint32_t both = (1u << panel.btn[B_OCTDN]) | (1u << panel.btn[B_OCTUP]);
+            if (demo_on)                                /* the player has them (above) */
+                break;
             if ((fm1_in.buttons & both) == both)
                 song.octave = 0;
             else

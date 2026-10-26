@@ -73,7 +73,7 @@ python3 tools/fm1_install.py build/felucca.fwsc
    du haut de l'écran, s'arrête au milieu, le petit carillon sonne, puis « MODULAR ONE » (une note
    le passe).
 2. Joue : la piste 1 est sur SOUFFLE, la 2 sur PRINTEMP, la 3 sur VELOURS EP. ALGORITHM change de piste.
-3. PRESETS fait défiler les 16 presets ; sur la page PRESETS (bouton SAVE), le potard 1 choisit
+3. PRESETS fait défiler les 40 presets ; sur la page PRESETS (bouton SAVE), le potard 1 choisit
    le son, le potard 2 passe d'une famille à l'autre.
 4. Les potards de la page HOME : BRIL, MONT, SUS, REL. EDIT : page FM (BRIL, GRAIN, TIMB, CLOCH)
    puis page ESPACE (MONT, NUIT, ILE, SUB).
@@ -103,13 +103,16 @@ En bas : les quatre valeurs.
   la forme, les machines d'effet, le clavier et la gamme, le séquenceur, la table de mixage.
 - Les autres pages : quatre faders, ou les choix empilés pour un réglage à options.
 
-## Les 16 presets
+## Les 40 presets
 
-Le son de Modular Town seulement, deux familles de huit :
+Le son de Modular Town seulement, cinq familles de huit, pensées pour écrire de la musique de film :
 
-- **SOUFFLES** : SOUFFLE, MAREE, ZEPHYR, PRINTEMP, VELOURS, NUIT, BRUINE, CREPUSCULE.
-- **KEYS** : des pianos électriques à lames, doux : VELOURS EP (BRIL 20 %), SALON, LAMPE,
-  FEUTRE, VEILLEUSE, COTON, BOUGIE, DIMANCHE.
+- **SOUFFLES** (les nappes) : SOUFFLE, MAREE, ZEPHYR, PRINTEMP, VELOURS, NUIT, BRUINE, CREPUSCULE.
+- **KEYS** (pianos électriques doux) : VELOURS EP, SALON, LAMPE, FEUTRE, VEILLEUSE, COTON, BOUGIE, DIMANCHE.
+- **LUMIERES** (cloches et pincés feutrés) : CELESTA, BOITE, HARPE, VERRE, VIBRA, KALIMBA, GLOCKEN, CARILLON.
+- **OMBRES** (graves et tension) : CONTRE, PULSE, ABYSSE, VIOLONC, CUIVRE, TREMOLO, RUMEUR, NOCTURNE.
+- **NEON** (la ville la nuit, les synthés des films des années 80) : HORIZON, LARMES, BLUES, PLUIE,
+  NEON, BRUME, PYRAMIDE, ECHO.
 
 ## Le MIDI (Studio One, etc.)
 
@@ -123,15 +126,64 @@ aussi : environ 74 Ko de mémoire libérés). Chaque piste a son pattern de 16 �
 PATTERN), l'enregistrement en direct (REC), l'arpégiateur (ARP) ; TRACKS les montre côte à côte.
 Les projets sauvegardés avant gardent leurs trois pistes de synthé ; leur piste batterie est ignorée.
 
-## La démo
+## Le lecteur
 
-OCT- et OCT+ maintenus ensemble 1 seconde : le synthé joue la 1re Gymnopédie d'Erik Satie
-(domaine public, environ 3 min 15), sur la piste choisie avec un son à lui, doux et chaud ; le son de la piste revient à la fin. La fenêtre
-sur la ville s'ouvre pendant que ça joue ; tu peux jouer par-dessus au clavier. Le même geste, ou
-HOME, l'arrête.
+OCT- et OCT+ maintenus ensemble 1 seconde : le lecteur démarre, sur le son de la piste choisie.
+Il joue les morceaux envoyés depuis l'ordinateur, puis tes croquis, les uns après les autres,
+et reprend au début après le dernier : il tourne en boucle jusqu'à ce que tu l'arrêtes.
+L'écran montre un magnéto à bandes vu de dessus : les deux bobines tournent et la bande passe
+de l'une à l'autre au fil du morceau. Pendant la lecture :
+
+- **POTARD 1** : fait apparaître la liste des morceaux et des croquis ; tourne pour choisir, le
+  morceau choisi démarre quand tu lâches le potard, et la liste disparaît 5 secondes après ;
+- **OCT+** : morceau suivant ;
+- **OCT-** : retour au début du morceau ; **deux fois** : morceau précédent ;
+- **OCT- et OCT+ ensemble 1 seconde**, ou **HOME** : stop.
+- **Effacer un croquis** : ouvre la liste avec le POTARD 1, place-toi sur le croquis et maintiens
+  **REC** ; la ligne demande confirmation, maintiens **REC** encore une fois pour l'effacer (OCT- ou
+  OCT+, ou tourner le potard, annule). Les croquis suivants gardent leur numéro, la lecture
+  reprend au même endroit. Les morceaux envoyés depuis l'ordinateur s'effacent depuis l'ordinateur.
+
+Pendant la lecture, OCT- et OCT+ ne changent plus l'octave du clavier ; tu peux jouer par-dessus,
+et PRESETS change le son. Un premier morceau à essayer : `examples/01_satie_gymnopedie_1.mid`
+(la 1re Gymnopédie d'Erik Satie, domaine public).
+
+## Le carnet de croquis
+
+Le FM-1 écoute en permanence ce que tu joues (clavier et MIDI), en mémoire seulement. Une idée
+te plaît ? **Maintiens REC** (sur HOME, EDIT, ENV, etc. ; sur SEQ, ARP et TRACKS, REC maintenu
+efface toujours la séquence) : il garde ta dernière phrase, depuis la première note après au moins
+4 secondes de silence. L'écran affiche « CROQUIS 3  0:42 ». **Maintiens REC encore**, sans rien
+jouer entre-temps : il remonte d'une phrase de plus. Les croquis rejoignent le lecteur et restent
+après extinction (environ 20 croquis, selon leur longueur).
+
+## Les morceaux et les croquis sur l'ordinateur
+
+**L'app Carnet** (`web/carnet.html`) : ouvre-la dans **Chrome** (ou Edge), branche le FM-1 en USB,
+clique **Connecter** et autorise le MIDI. À gauche les **morceaux** : dépose des fichiers .mid,
+range-les en les glissant, renomme-les (12 lettres), écoute-les, efface-les avec ✕. Chaque
+changement part tout seul sur le FM-1 (« ✓ Sur le FM-1 » quand c'est fait). À droite les **croquis** : écoute-les, exporte-les en .mid (un par un
+ou tout en .zip), passe-les dans les morceaux avec la flèche, ou efface-les. Clique le nom d'un
+croquis pour le renommer (12 lettres) : le nouveau nom apparaît aussi dans la liste du magnéto. Les morceaux du FM-1
+s'exportent aussi en .mid. Pour l'essayer sans le FM-1 : `carnet.html?demo`.
+
+Ou en ligne de commande :
+
+```
+pip3 install mido python-rtmidi
+python3 tools/fm1_songs.py load mes_morceaux/        # jusqu'à 20 fichiers .mid (01_..., 02_...)
+python3 tools/fm1_songs.py sketches mes_croquis/     # les croquis en fichiers .mid
+python3 tools/fm1_songs.py info
+python3 tools/fm1_songs.py clear-sketches            # vider le carnet
+python3 tools/fm1_songs.py clear                     # plus de morceaux
+```
+
+Les morceaux et les croquis prennent deux des trois emplacements de samples de Felucca : il reste
+l'emplacement USR1 pour tes samples.
 
 ## Le menu (HOME maintenu)
 
+- **BOLD TEXT** : les petites lettres en gras, même typo, plus lisibles (activé par défaut).
 - **LOW CUT** : coupe sous 110 Hz pour le petit haut-parleur (à éteindre au casque).
 - **SCREEN SAVER** : après une minute sans toucher le synthé, la fenêtre sur Modular Town
   (la ville vue de l'autre côté de l'eau, qui suit le son), dans les mêmes quatre verts ; le

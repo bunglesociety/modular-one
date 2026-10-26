@@ -192,6 +192,34 @@ int main(int argc, char **argv)
     ui.menu = 2;
     frame();
     save(dir, "91_about");
-    printf("m1_ui: %u screens into %s\n", NPAGES + 7u, dir);
+    {                                                   /* the player: the cassette and the list */
+        static const uint8_t P[] = {3, 60, 100, 50, 0, 64, 100, 50, 0, 67, 100, 100};
+        static const char *const NM[3] = {"NUIT EN VILLE", "CROQUIS 1", "CROQUIS 2"};
+        ui.menu = 0;
+        ui.home = 1;
+        for (i = 0; i < 3u; i++) {
+            pl_item[i].data = P;
+            pl_item[i].n = 3;
+            pl_item[i].dur10 = 200u + i * 4100u;
+            str_cpy(pl_item[i].name, NM[i], PL_NAME);
+        }
+        pl_count = 3;
+        demo_on = 1;
+        pl_idx = 1;
+        pl_cursor = 2;
+        demo_pos = 2000u * 441u;
+        frame();
+        save(dir, "92_player");
+        pl_list_ms = (fm1_ms - 100u) | 1u;              /* KNOB 1 turned: the list pops up */
+        frame();
+        save(dir, "93_player_list");
+        pl_del = 3;                                     /* REC held on CROQUIS 2: "erase?" */
+        frame();
+        save(dir, "94_player_erase");
+        pl_del = 0;
+        pl_list_ms = 0;
+        demo_on = 0;
+    }
+    printf("m1_ui: %u screens into %s\n", NPAGES + 10u, dir);
     return 0;
 }

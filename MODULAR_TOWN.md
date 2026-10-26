@@ -15,7 +15,7 @@ Status: **beta**, runs on the author's FM-1, not yet tested on other units. See 
 
 | Where | What |
 | --- | --- |
-| `firmware/src/eng_mtfm.c` | **TOWN**, engine 9: carrier, modulator 1 with feedback, modulator 2 (detunable), soft low-pass per voice; 16 presets (SOUFFLES, KEYS) |
+| `firmware/src/eng_mtfm.c` | **TOWN**, engine 9: carrier, modulator 1 with feedback, modulator 2 (detunable), soft low-pass per voice; 40 presets (SOUFFLES, KEYS, LUMIERES, OMBRES, NEON) |
 | `firmware/src/mt_fx.c` | the Modular Town delay (stereo ping-pong, right line 1.38x, gliding time), plate (pre-delay, diffusers, 4 breathing combs per side) and the island on the master |
 | `firmware/src/mt_tables.h` | the Cmajor curves, sampled (`tools/gen_mt_tables.py`) |
 | `firmware/src/fx.c` | Felucca's delay and reverb replaced by `mt_fx.c` (stereo wet); the chorus and DIST stay |
@@ -26,6 +26,10 @@ Status: **beta**, runs on the author's FM-1, not yet tested on other units. See 
 | `firmware/src/mt_city.c` | the window: on HOME, EDIT and ENV of a TOWN track, Modular Town across the water; the hour, the light, the island and the water follow the sound; the picture is rebuilt a few rows per frame |
 | `firmware/src/mt_city_data.h` | the far shore, palette-indexed and RLE (`tools/gen_city.py`, about 5 KB); the sky and the water are computed |
 | `tests/mt_city_host.c` | the window on the host: a day to night story into frames, the cost per frame |
+| `firmware/src/seq.c` | 0.2: the player (several pieces, OCT+ next, OCT- restart / twice previous, 1.5 s between pieces) and the sketchbook ring (every note played, keys and MIDI in; phrases split by 4 s of silence) |
+| `firmware/src/m1_book.c` | 0.2: songs (sample slot 3) and sketches (slot 2) in flash, REC held keeps a sketch; editor cmds 40-46 in `editor.c` |
+| `tools/fm1_songs.py` | 0.2: send MIDI files as songs, get the sketches back as MIDI files |
+| `tests/m1_book_test.c` | 0.2: phrases, depth, held keys, the 2-minute window, the ring, the player's controls |
 
 All the other Felucca engines are still there. Felucca's fourth track, the GM drum track, is gone
 (`firmware/src/drums.c`, the PERC sample set): three tracks, the parts; stored projects keep Felucca's

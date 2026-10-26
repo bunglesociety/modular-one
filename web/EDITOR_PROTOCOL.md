@@ -197,3 +197,24 @@ editor takes both from `INFO`; records stored with 53 load with the SLICER off.
   from the editor.
 - **Safety.** Only `PROJECT` save, the sample-slot commands and `UP_PUT` / `UP_STORE` / `UP_ERASE` write flash, and only in
   Felucca's own storage; never the app or the update area.
+
+## Modular One (0.2): songs and sketches
+
+| cmd | Request args | Reply args |
+| --- | --- | --- |
+| 40 SONG_BEGIN | — | rc. Stops the player, erases the song bank's header sector |
+| 41 SONG_WRITE | offset (3 × 7 bit), pack7 data (≤ 256 bytes) | offset, rc (as SMP_WRITE: offset ≥ 512, a multiple of 256, increasing) |
+| 42 SONG_END | pack7 header (420 bytes: magic "FSN1", version 1, count, data length, CRC-32, 0, then 20 × (offset, notes, name[12])) | rc: 0 ok, 1 size, 2 header, 3 data CRC, 4 flash |
+| 43 SONG_INFO | — | count, then per song: notes (3 × 7 bit), name string |
+| 44 SK_INFO | — | sketches, sectors used, sectors (20), KiB per sector (4) |
+| 45 SK_READ | offset (3 × 7 bit) | offset, pack7 of 256 bytes of the sketch area (flash 0xB4000..) |
+| 46 SK_CLEAR | — | rc. Stops the player, erases every sketch |
+| 47 SONG_READ | offset (3 × 7 bit) | offset, pack7 of 256 bytes of the song bank (header at 0, data at 512) |
+| 48 SK_ERASE | sketch index (0 = the first) | rc. Stops the player, erases that sketch; the ones after it move down and keep their numbers |
+| 49 SK_RENAME | sketch index, name string (≤ 12 ASCII characters; empty = no name) | rc: 0 ok, 1 no such sketch, 4 no room (a sketch from before names whose sectors are full). Stops the player |
+
+A sketch header's word at +24 is its flags: `0xFFFFFFFE` = the body starts with the name (12 bytes, 0-padded; all 0 = none, shown "CROQUIS n"), then the notes; `0xFFFFFFFF` = the notes only (sketches kept before names). `len` and the CRC cover the name too.
+
+The sample commands (11-14) only accept slot 0 (USR1): slots 2 and 3 hold the sketches and the songs.
+The app: `web/carnet.html` (Chrome, one file; `?demo` runs it on a pretend FM-1).
+Piece format, layouts: `firmware/src/seq.c`, `firmware/src/m1_book.c`, `tools/fm1_songs.py`.

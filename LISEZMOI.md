@@ -17,43 +17,63 @@ Hügelton Instruments ou par M-VAVE.
 ## Ce qu'il contient
 
 - **Le moteur TOWN** : porteuse, modulateur avec feedback, second modulateur désaccordable,
-  passe-bas doux. 16 presets en deux familles : SOUFFLES (nappes) et KEYS (pianos électriques doux).
+  passe-bas doux. 40 presets en cinq familles, pensés pour écrire de la musique de film : SOUFFLES
+  (nappes), KEYS (pianos électriques doux), LUMIERES (cloches feutrées), OMBRES (graves et tension),
+  NEON (les synthés des films des années 80).
 - **Les effets de Modular Town** : delay ping-pong stéréo, réverbe à plaque « années 80 », et l'île
   (un nuage scintillant sur tout le mix).
 - **Les réglages** : BRIL (brillance), MONT (montée), NUIT (plus sombre, queues plus longues),
   ILE (l'île, on/off).
 - **La fenêtre** : Modular Town de l'autre côté de l'eau ; l'heure, la lumière et l'eau suivent le
   son. Elle sert aussi d'écran de veille.
-- **Le lecteur MIDI** : OCT- et OCT+ maintenus ensemble 1 seconde jouent la 1re Gymnopédie
-  d'Erik Satie (domaine public, environ 3 minutes) sur la piste en cours. On peut jouer par-dessus. Le même geste, ou HOME, l'arrête.
+- **Le magnéto** : OCT- et OCT+ maintenus ensemble 1 seconde. Il joue tes morceaux (fichiers
+  MIDI envoyés depuis l'ordinateur) et tes croquis, à la suite et en boucle, sur le son en cours, avec un magnéto à bandes
+  à l'écran. Le POTARD 1 fait apparaître la liste pour choisir un morceau ou un croquis, OCT+ morceau suivant, OCT-
+  retour au début, OCT- deux fois morceau précédent. On peut jouer par-dessus. Le même geste, ou
+  HOME, l'arrête. Un premier morceau à essayer : `examples/01_satie_gymnopedie_1.mid` (Erik Satie,
+  domaine public).
+- **Le carnet de croquis** : le FM-1 écoute en permanence. Ce que tu viens de jouer te plaît ?
+  Maintiens REC : il garde ta dernière phrase (depuis la première note après 4 s de silence).
+  Maintiens REC encore : une phrase de plus en arrière. Les croquis restent après extinction et
+  rejoignent le lecteur.
+- **L'app Carnet** ([en ligne](https://bunglesociety.github.io/modular-one/carnet/), ou `web/carnet.html`, dans Chrome) : dépose des fichiers MIDI, range-les et
+  renomme-les, envoie-les au FM-1 ; écoute tes croquis, exporte-les en MIDI, efface-les, fais-en des
+  morceaux.
+- **`tools/fm1_songs.py`** : la même chose en ligne de commande : envoie tes morceaux (`load dossier/`), récupère tes croquis en
+  fichiers MIDI (`sketches dossier/`).
 - Trois pistes de synthé. La piste batterie de Felucca a été retirée.
 
 Tous les détails (pages, potards, notes techniques) : [MODULAR_TOWN.md](MODULAR_TOWN.md).
 
-## Avant d'installer
+## Installer
 
-1. Revenez d'abord au **firmware officiel M-VAVE (V15 ou plus récent)** avec l'outil M-UPGRADE
-   de M-VAVE (m-vave.com, rubrique Downloads).
-2. Branchez le câble USB **directement** sur l'ordinateur, sans hub. Empêchez la mise en veille.
+**Le plus simple : [bunglesociety.github.io/modular-one](https://bunglesociety.github.io/modular-one/)**,
+dans Chrome ou Edge sur un ordinateur. Branchez le FM-1 en USB, cliquez Installer, attendez environ
+deux minutes. Le même site propose l'app **Carnet** pour les morceaux et les croquis.
+
+Avant d'installer :
+
+1. Branchez le câble USB **directement** sur l'ordinateur, sans hub. Empêchez la mise en veille.
+2. Vos presets faits avec le firmware officiel sont perdus (on ne peut pas les exporter).
 3. Si une installation échoue et que le FM-1 ne démarre plus, l'outil de récupération est
    [FM-1-transporter](https://github.com/kurogedelic/FM-1-transporter).
 
-## Installer
-
-Téléchargez `modular-one-0.1-beta.fwsc` sur la page Releases, puis, dans un terminal ouvert dans ce dépôt :
+**En ligne de commande** à la place : téléchargez `modular-one-0.2-beta.fwsc` (page Releases, ou
+`docs/firmware/` dans ce dépôt), puis :
 
 ```
 pip3 install mido python-rtmidi
 python3 tools/fm1_install.py --info
-python3 tools/fm1_install.py modular-one-0.1-beta.fwsc
+python3 tools/fm1_install.py modular-one-0.2-beta.fwsc
 ```
 
 `--info` trouve seulement le FM-1 et n'écrit rien.
 
-**Revenir en arrière** : réinstallez le firmware officiel avec M-UPGRADE de M-VAVE.
+**Revenir en arrière** : réinstallez le firmware officiel avec l'outil M-UPGRADE de M-VAVE
+(m-vave.com, rubrique Downloads).
 
-SHA-256 de `modular-one-0.1-beta.fwsc` :
-`beab4e0e28ff2ff3ef5073d6d63fa257c466c0fca25ba984f0f59335665184ca`
+SHA-256 de `modular-one-0.2-beta.fwsc` :
+`1dac495c068e8a220598920bbcd79b03ce39d7d260966ae1b591ab6d54cc274c`
 
 ## Compiler depuis les sources
 
