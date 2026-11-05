@@ -149,6 +149,8 @@
     <details><summary data-t="q4"></summary><p data-t="a4"></p></details>
     <details><summary data-t="q5"></summary><p data-t="a5"></p></details>
     <details><summary data-t="q6"></summary><p data-t="a6"></p></details>
+    <details><summary data-t="q7"></summary><p data-t="a7"></p></details>
+    <details><summary data-t="q8"></summary><p data-t="a8"></p></details>
   </section>
 
   <footer>
@@ -176,13 +178,13 @@ const TEXT = {
     f1t: "40 sons de film", f1: "Cinq familles : souffles, claviers doux, lumières, ombres et néon façon années 80. Prêts pour composer à l'image.",
     f2t: "Le carnet de croquis", f2: "Le FM-1 écoute en permanence. Une idée te plaît ? Maintiens REC : il garde ta dernière phrase. Encore : une phrase plus loin.",
     f3t: "Le magnéto", f3: "OCT- et OCT+ ensemble : il joue tes morceaux et tes croquis en boucle, bobines qui tournent. Tu peux jouer par-dessus.",
-    f4t: "Ta liste", f4: "Le potard 1 fait apparaître la liste : choisis un morceau, un croquis, ou efface celui qui ne te sert plus.",
+    f4t: "Ta liste", f4: "Maintiens SEQ : la liste de tes morceaux et de tes croquis apparaît sur le magnéto. Le potard 1 choisit, REC deux fois efface, lâcher SEQ joue ton choix.",
     f5t: "Un vrai moteur FM", f5: "Le moteur du plugin Modular Town : modulateur avec feedback, second modulateur, delay ping-pong, réverbe à plaque et l'« île ».",
     f6t: "Trois pistes", f6: "Trois parties de synthé avec séquenceur et arpégiateur, hérités de Felucca. Sans batterie : ici, on écrit.",
     howTitle: "L'installer",
     h1: "Ouvre la page d'installation dans Chrome ou Edge, sur ton ordinateur.",
     h2: "Branche le FM-1 en USB, directement, sans hub. Allume-le.",
-    h3: "Clique Installer et attends environ deux minutes, sans rien débrancher.",
+    h3: "Clique Installer : la page lit d'abord ce qu'il y a sur ton FM-1 et sa version, puis te demande de confirmer. Environ deux minutes, sans rien débrancher.",
     howNote: "Ensuite, le Carnet envoie tes fichiers MIDI au FM-1 et récupère tes croquis.",
     faqTitle: "Questions",
     q1: "C'est gratuit ?", a1: "Oui. Modular One est un logiciel libre (GPL-3.0) : le code est sur GitHub, tu peux le lire, le modifier et le partager.",
@@ -191,6 +193,8 @@ const TEXT = {
     q4: "Ça marche sur Mac, Windows, iPad ?", a4: "Sur Mac, Windows et Linux, dans Chrome ou Edge. Pas dans Safari ni Firefox, et pas sur iPhone ou iPad : ils n'ont pas le MIDI web.",
     q5: "C'est risqué ?", a5: "C'est une bêta non officielle, testée sur le FM-1 de l'auteur. Une installation interrompue se reprend en recliquant sur Installer. Dans le pire des cas, l'outil FM-1-transporter permet de récupérer la machine.",
     q6: "Je peux mettre ma propre musique dans le magnéto ?", a6: "Oui : glisse tes fichiers .mid dans le Carnet, ils partent sur le FM-1. Jusqu'à 20 morceaux, tous les canaux jouent sur le son choisi.",
+    q8: "Mon FM-1 est un modèle récent, ça marche ?", a8: "Oui, depuis la 0.3. Les FM-1 vendus depuis fin 2026 (le logo imprimé sur la façade) ont une autre puce de mémoire : Modular One 0.3 la connaît. Les versions 0.1 et 0.2 ne la connaissaient pas : sur un FM-1 récent, elles ne gardaient rien et refusaient les mises à jour. Dans ce cas, la page d'installation explique comment le récupérer.",
+    q7: "Je peux passer à Modular Koi, et revenir ?", a7: "Oui, quand tu veux : chaque page d'installation dit ce qu'il y a sur ton FM-1 avant d'écrire. Tes croquis et tes morceaux sont gardés au même endroit par les deux : tu les retrouves en changeant.",
     based: "Basé sur", thanks: "Merci à lui du fond du cœur.",
     license: "Logiciel libre GPL-3.0, sans garantie. Code source :", tm: "M-VAVE et FM-1 sont des marques de leurs propriétaires. Modular One n'est ni fait ni soutenu par M-VAVE ou Hügelton Instruments.",
   },
@@ -209,13 +213,13 @@ const TEXT = {
     f1t: "40 film sounds", f1: "Five families: breaths, soft keys, lights, shadows and 80's neon. Ready for scoring to picture.",
     f2t: "The sketchbook", f2: "The FM-1 always listens. Like an idea? Hold REC: it keeps your last phrase. Again: one phrase further back.",
     f3t: "The tape player", f3: "OCT- and OCT+ together: it plays your songs and sketches in a loop, reels turning. You can play over it.",
-    f4t: "Your list", f4: "Knob 1 pops up the list: pick a song, a sketch, or erase the one you no longer need.",
+    f4t: "Your list", f4: "Hold SEQ: the list of your songs and sketches shows over the tape player. Knob 1 chooses, REC twice erases, letting go of SEQ plays your choice.",
     f5t: "A real FM engine", f5: "The Modular Town plugin's engine: modulator with feedback, a second modulator, ping-pong delay, plate reverb and the \"island\".",
     f6t: "Three tracks", f6: "Three synth parts with sequencer and arpeggiator, from Felucca. No drums: here, you write.",
     howTitle: "Install it",
     h1: "Open the install page in Chrome or Edge, on your computer.",
     h2: "Connect the FM-1 by USB, directly, no hub. Switch it on.",
-    h3: "Click Install and wait about two minutes, unplugging nothing.",
+    h3: "Click Install: the page first reads what is on your FM-1 and its version, then asks you to confirm. About two minutes, unplugging nothing.",
     howNote: "Then the Carnet sends your MIDI files to the FM-1 and gets your sketches back.",
     faqTitle: "Questions",
     q1: "Is it free?", a1: "Yes. Modular One is free software (GPL-3.0): the code is on GitHub, you can read it, change it and share it.",
@@ -224,6 +228,8 @@ const TEXT = {
     q4: "Mac, Windows, iPad?", a4: "Mac, Windows and Linux, in Chrome or Edge. Not Safari or Firefox, and not on iPhone or iPad: they have no Web MIDI.",
     q5: "Is it risky?", a5: "It is an unofficial beta, tested on the author's FM-1. An interrupted install resumes by clicking Install again. At worst, the FM-1-transporter tool recovers the unit.",
     q6: "Can I put my own music in the tape player?", a6: "Yes: drop your .mid files in the Carnet and they go to the FM-1. Up to 20 songs; every channel plays on the chosen sound.",
+    q8: "My FM-1 is a recent one, does it work?", a8: "Yes, from 0.3 on. FM-1s sold from late 2026 (the logo printed on the front) have another memory chip: Modular One 0.3 knows it. Versions 0.1 and 0.2 did not: on a recent FM-1 they kept nothing and refused updates. If that is your case, the install page explains how to recover it.",
+    q7: "Can I switch to Modular Koi, and back?", a7: "Yes, whenever you like: each install page says what is on your FM-1 before writing. Both keep your sketches and songs in the same place: you find them again when you switch.",
     based: "Based on", thanks: "Heartfelt thanks to him.",
     license: "Free software, GPL-3.0, no warranty. Source:", tm: "M-VAVE and FM-1 are trademarks of their respective owners. Modular One is not made or supported by M-VAVE or Hügelton Instruments.",
   },

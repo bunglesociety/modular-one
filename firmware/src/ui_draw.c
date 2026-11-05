@@ -1520,10 +1520,10 @@ static void ui_tick(void)
 /* ------------------------------------------------------------ the player --- */
 /* While the player runs (seq.c): a tape recorder seen from above, nothing else. Two open reels
  * turn, the tape goes from the left one to the right one as the piece goes, down around two
- * rollers and under the head. Below: the piece's name, the sound, the time. KNOB 1 pops the list
- * up over the bottom half (ui_input.c: the choice plays when the knob rests, the list goes 5 s
- * later). Two strips drawn from the same scene: the reels at ~15 frames/s, the bottom when it
- * changes. */
+ * rollers and under the head. Below: the piece's name, the sound, the time. SEQ held pops the list
+ * up over the bottom half, the tape playing or not (ui_input.c: K1 chooses, REC asks to erase a
+ * sketch, REC again erases it, letting SEQ go plays the choice), as in Modular Koi. Two strips drawn
+ * from the same scene: the reels at ~15 frames/s, the bottom when it changes. */
 #define PL_RY 74                                                    /* the reels' centres */
 #define PL_RL 64
 #define PL_RR 176
@@ -1587,10 +1587,11 @@ static void pl_deck(uint32_t p1000, uint32_t ang)
 static void m1_player_draw(int force)
 {
     static uint32_t last_frame, low_sig;
-    const pl_item_t *it = &pl_item[pl_idx % PL_MAX];
-    uint32_t el = demo_pos / 441u, dur = it->dur10, p1000 = dur ? (el >= dur ? 1000u : el * 1000u / dur) : 0u;
-    uint32_t ang = demo_pos * 1715u, sig;                          /* a turn every ~2.5 s */
-    int list = pl_list_ms && fm1_ms - pl_list_ms < PL_LIST_MS;
+    uint32_t idx = demo_on ? pl_idx : pl_cursor;                    /* (stopped, SEQ held: the one chosen) */
+    const pl_item_t *it = &pl_item[idx % PL_MAX];
+    uint32_t el = demo_on ? demo_pos / 441u : 0u, dur = it->dur10, p1000 = dur ? (el >= dur ? 1000u : el * 1000u / dur) : 0u;
+    uint32_t ang = demo_on ? demo_pos * 1715u : 0u, sig;            /* a turn every ~2.5 s */
+    int list = seq_list != 0;
     char b[24], c[16];
     if (force || ui.frame - last_frame >= 4u) {                     /* the reels */
         last_frame = ui.frame;
@@ -1598,14 +1599,14 @@ static void m1_player_draw(int force)
         pl_deck(p1000, ang);
         if (ui.msg_t)
             m1_text(6, 3, FN_SM, ui.msg, M_TEXT);
-        fmt_int(b, (int32_t)pl_idx + 1);
+        fmt_int(b, pl_count ? (int32_t)idx + 1 : 0);
         str_cpy(b + str_len(b), " / ", 4);
         fmt_int(c, (int32_t)pl_count);
         str_cpy(b + str_len(b), c, 8);
         m1_text_r(234, 3, FN_LAB, b, M_GREY);
         cv_blit(0, 0);
     }
-    sig = pl_idx * 7u + pl_cursor * 131u + pl_count * 977u + el / 100u * 13u + TSEL->preset * 31u +
+    sig = idx * 7u + pl_cursor * 131u + pl_count * 977u + el / 100u * 13u + TSEL->preset * 31u +
           (uint32_t)TSEL->eng_req * 5u + (uint32_t)list * 7919u + p1000 / 30u * 101u + pl_del * 65537u;
     if (!force && sig == low_sig)
         return;
@@ -1614,7 +1615,7 @@ static void m1_player_draw(int force)
     cv_oy = -124;
     if (!list) {                                                   /* the rollers, the name, the time */
         pl_deck(p1000, ang);
-        m1_text(8, 166, FN_NAME, it->name, M_TEXT);
+        m1_text(8, 166, FN_NAME, pl_count ? it->name : "TAPE EMPTY", M_TEXT);
         str_cpy(c, ENGINES[TSEL->eng_req]->presets[TSEL->preset % ENGINES[TSEL->eng_req]->npresets].name, sizeof c);
         m1_text_r(232, 196, FN_LAB, c, M_GREY);
         pl_time(b, el);
@@ -1624,25 +1625,29 @@ static void m1_player_draw(int force)
         m1_text(8, 196, FN_LAB, b, M_TEXT);
         cv_rect(8, 212, 224, 2, M_DIM);                            /* where the piece is */
         cv_rect(8, 212, (int32_t)(224u * p1000 / 1000u), 2, M_TEXT);
-        m1_text_c(120, 224, FN_LAB, "K1 LIST  OCT+ NEXT  OCT- START", M_GREY);
+        m1_text_c(120, 224, FN_LAB, "SEQ LIST  OCT+ NEXT  OCT- START", M_GREY);
     } else {                                                       /* the list, popped up */
-        int32_t first = clamp((int32_t)pl_cursor - 2, 0, pl_count > 6u ? (int32_t)pl_count - 6 : 0), row;
+        int32_t first = clamp((int32_t)pl_cursor - 2, 0, pl_count > 5u ? (int32_t)pl_count - 5 : 0), row;
         pl_deck(p1000, ang);
-        cv_rect(4, 128, 232, 108, M_BG);
+        cv_rect(4, 128, 232, 94, M_BG);
         cv_rect(4, 128, 232, 1, M_TEXT);
-        cv_rect(4, 235, 232, 1, M_TEXT);
-        cv_rect(4, 128, 1, 108, M_TEXT);
-        cv_rect(235, 128, 1, 108, M_TEXT);
-        for (row = 0; row < 6 && first + row < (int32_t)pl_count; row++) {
+        cv_rect(4, 221, 232, 1, M_TEXT);
+        cv_rect(4, 128, 1, 94, M_TEXT);
+        cv_rect(235, 128, 1, 94, M_TEXT);
+        cv_rect(0, 222, 240, 18, M_BG);
+        m1_text_c(120, 226, FN_LAB, "K1 CHOOSE  REC ERASE  LET GO: PLAY", M_GREY);
+        if (!pl_count)
+            m1_text(12, 136, FN_LAB, "NO SONG, NO SKETCH", M_TEXT);
+        for (row = 0; row < 5 && first + row < (int32_t)pl_count; row++) {
             uint32_t k = (uint32_t)(first + row);
-            int32_t y = 133 + row * 17;
-            int sel = k == pl_cursor, playing = k == pl_idx;
+            int32_t y = 134 + row * 17;
+            int sel = k == pl_cursor, playing = demo_on && k == pl_idx;
             if (pl_del == k + 1u) {                                /* "erase?" */
                 cv_rect(5, y - 3, 230, 16, M_TEXT);
                 str_cpy(b, "ERASE ", 8);
                 str_cpy(b + 6, pl_item[k].name, sizeof b - 6u);
                 m1_text(12, y, FN_LAB, b, M_BG);
-                m1_text_r(228, y, FN_LAB, "HOLD REC", M_BG);
+                m1_text_r(228, y, FN_LAB, "REC", M_BG);
                 continue;
             }
             if (sel)
@@ -1705,7 +1710,7 @@ static void ui_draw(void)
     }
     {                                                               /* the player: the cassette */
         static uint8_t was;
-        if (demo_on) {
+        if (demo_on || seq_list) {                                  /* (SEQ held: its list, over the deck) */
             if (m1.saver) {
                 m1.saver = 0;
                 city_leave();

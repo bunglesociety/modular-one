@@ -1,0 +1,165 @@
+<style>
+/* Modular One, page bunglesociety.com: a Squarespace code block (HTML + CSS only, no script: the Basic plan).
+   The page itself is painted in the FM-1 screen's light green (below); the rest is scoped under .m1w. FR / EN: two radio
+   buttons, CSS only. Made by web/make_m1_block.py from home.html (edit the texts there). */
+@import url("https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=IBM+Plex+Mono:wght@400;600&display=swap");
+/* the whole page on the paper: this block is only on this page, so these rules touch only it
+   (Squarespace 7.1: each section draws its colour in .section-background; the header and footer too) */
+html, body, #siteWrapper, #page, main#page, .page-section, .page-section > .section-background, .section-background,
+#footer-sections, #footer-sections .section-background, header#header, header#header .header-background-solid,
+.header-announcement-bar-wrapper { background-color: #9bbc0f !important; background-image: none !important; }
+header#header a, header#header .header-nav-item a, header#header .header-title a, header#header .header-burger-btn,
+#footer-sections, #footer-sections p, #footer-sections a { color: #0f380f !important; }
+header#header .burger-inner > div { background-color: #0f380f !important; }
+.m1w { --bg: #9bbc0f; --grain: #8bac0f; --panel: #c4d77a; --dim: #306230; --ink: #0f380f; --green: #306230; --warm: #8c3b1f;
+       --night: #0d2112; --shadow: rgba(15, 56, 15, .28);
+       background-color: var(--bg); background-image: radial-gradient(var(--grain) 1px, transparent 1.2px); background-size: 7px 7px;
+       color: var(--ink); font: 15px/1.65 "IBM Plex Mono", ui-monospace, Menlo, monospace;
+       padding: 28px clamp(16px, 4vw, 44px) 40px; box-sizing: border-box; text-align: left; }
+.m1w *, .m1w *::before, .m1w *::after { box-sizing: border-box; }
+.m1w p, .m1w h1, .m1w h2, .m1w h3, .m1w ul { margin: 0; padding: 0; color: var(--ink); text-transform: none; letter-spacing: normal; }
+.m1w a { color: var(--ink); }
+.m1w .px { font-family: "Silkscreen", "IBM Plex Mono", monospace !important; letter-spacing: .04em; font-weight: 400 !important; }
+
+/* the language switch: two radios, the words of the other language hidden */
+.m1w input.m1w-l { position: absolute; opacity: 0; pointer-events: none; }
+.m1w img.map { display: block; width: 100%; height: auto; margin: 8px 0 18px; border-radius: 6px; }
+.m1w .lang { display: flex; justify-content: flex-end; gap: 4px; font-family: "Silkscreen", monospace; font-size: 12px; color: var(--dim); }
+.m1w .lang label { cursor: pointer; padding: 2px 6px; color: var(--dim); }
+.m1w #m1w-fr:checked ~ .lang label[for="m1w-fr"], .m1w #m1w-en:checked ~ .lang label[for="m1w-en"] { color: var(--ink); text-decoration: underline; }
+.m1w #m1w-fr:checked ~ * .en, .m1w #m1w-en:checked ~ * .fr { display: none !important; }
+
+.m1w .hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: center; padding: 26px 0 28px; }
+@media (max-width: 820px) { .m1w .hero { grid-template-columns: 1fr; gap: 26px; } }
+.m1w h1 { font-size: clamp(36px, 6.2vw, 62px) !important; line-height: .95 !important; margin: 0 0 18px; }
+.m1w .lead { font-size: 17px; margin-bottom: 22px; max-width: 520px; }
+.m1w .cta { display: flex; flex-wrap: wrap; gap: 14px; }
+.m1w a.btn { font-family: "Silkscreen", monospace; font-size: 15px; letter-spacing: .04em; text-decoration: none; padding: 13px 20px;
+             background: var(--ink); color: var(--bg); box-shadow: 4px 4px 0 var(--shadow); display: inline-block; }
+.m1w a.btn:hover { filter: brightness(1.18); }
+.m1w a.btn.ghost { background: transparent; color: var(--ink); outline: 3px solid var(--ink); outline-offset: -3px; box-shadow: none; }
+.m1w .note { font-size: 12.5px; color: var(--dim); margin-top: 14px; }
+.m1w .screen { background: #1d1b18; padding: 20px 20px 14px; border-radius: 10px; box-shadow: 8px 8px 0 var(--shadow); max-width: 440px; width: 100%; justify-self: center; }
+.m1w .screen img { display: block; width: 100%; height: auto; aspect-ratio: 1; image-rendering: pixelated; border: 2px solid #000; }
+.m1w .screen .lbl { color: #8c8678; font-family: "Silkscreen", monospace; font-size: 11px; letter-spacing: .08em; margin-top: 10px; display: flex; justify-content: space-between; gap: 10px; }
+
+.m1w section { padding: 30px 0 4px; border-top: 3px solid var(--ink); margin-top: 24px; }
+.m1w h2 { font-size: 22px !important; margin-bottom: 16px; }
+.m1w .story { max-width: 720px; font-size: 16px; }
+.m1w .story p + p { margin-top: 12px; }
+
+.m1w .family { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; background: var(--panel); border: 3px solid var(--ink); padding: 14px 18px; font-size: 14px; }
+.m1w .family b { font-family: "Silkscreen", monospace; font-weight: 400; letter-spacing: .04em; }
+.m1w .family .grow { flex: 1; min-width: 220px; }
+.m1w .family a { font-family: "Silkscreen", monospace; font-size: 13px; white-space: nowrap; }
+
+.m1w .feats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+@media (max-width: 900px) { .m1w .feats { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .m1w .feats { grid-template-columns: 1fr; } }
+.m1w .feat { background: var(--panel); border: 3px solid var(--ink); box-shadow: 6px 6px 0 var(--shadow); }
+.m1w .feat img { display: block; width: 100%; height: auto; aspect-ratio: 1; image-rendering: pixelated; border-bottom: 3px solid var(--ink); }
+.m1w .feat div { padding: 14px 16px 16px; }
+.m1w .feat h3 { font-size: 15px !important; margin-bottom: 6px; }
+.m1w .feat p { font-size: 13.5px; }
+
+.m1w .ctl { display: grid; grid-template-columns: 12em 1fr; gap: 6px 18px; max-width: 760px; font-size: 14px; }
+@media (max-width: 600px) { .m1w .ctl { grid-template-columns: 1fr; gap: 2px; } .m1w .ctl dd { margin-bottom: 8px !important; } }
+.m1w .ctl dt { font-family: "Silkscreen", monospace; font-size: 13px; letter-spacing: .03em; }
+.m1w .ctl dd { margin: 0; }
+
+.m1w ol.steps { counter-reset: s; list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+@media (max-width: 760px) { .m1w ol.steps { grid-template-columns: 1fr; } }
+.m1w ol.steps li { counter-increment: s; background: var(--panel); border: 3px solid var(--ink); padding: 16px 16px 14px; font-size: 14px; margin: 0; }
+.m1w ol.steps li::before { content: counter(s); font-family: "Silkscreen", monospace; font-size: 28px; display: block; line-height: 1; margin-bottom: 8px; color: var(--green); }
+.m1w .after { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+.m1w .faq details { border-bottom: 2px dashed var(--dim); padding: 10px 0; }
+.m1w .faq summary { cursor: pointer; font-weight: 600; list-style: none; }
+.m1w .faq summary::-webkit-details-marker { display: none; }
+.m1w .faq summary::before { content: "▸ "; font-family: "Silkscreen", monospace; }
+.m1w .faq details[open] summary::before { content: "▾ "; }
+.m1w .faq p { margin: 8px 0 4px 18px; font-size: 14px; }
+.m1w .foot { margin-top: 34px; font-size: 12.5px; color: var(--dim); border-top: 3px solid var(--ink); padding-top: 12px; }
+.m1w .foot a { color: var(--dim); }
+.m1w .listen { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px; background: var(--panel); border: 3px solid var(--ink); padding: 14px 18px; margin-top: 22px; }
+.m1w .listen b { font-family: "Silkscreen", monospace; font-weight: 400; letter-spacing: .04em; }
+.m1w .listen audio { flex: 1; min-width: 240px; max-width: 520px; }
+.m1w .feat img.wide { aspect-ratio: auto; }
+.m1w .video { position: relative; aspect-ratio: 16 / 9; border: 3px solid var(--ink); box-shadow: 6px 6px 0 var(--shadow); background: #000; max-width: 820px; }
+.m1w .video iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.m1w .screen .led { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #c33; margin-right: 6px; vertical-align: 1px; box-shadow: 0 0 6px #f44; }
+</style>
+
+<div class="m1w">
+  <input type="radio" name="m1w-lang" id="m1w-fr" class="m1w-l" checked>
+  <input type="radio" name="m1w-lang" id="m1w-en" class="m1w-l">
+  <div class="lang"><label for="m1w-fr">FR</label>/<label for="m1w-en">EN</label></div>
+
+  <div class="hero">
+    <div>
+      <h1 class="px">Modular<br>One</h1>
+      <p class="lead"><span class="fr">Un firmware gratuit pour le synthé M-VAVE FM-1. Des sons pensés pour la musique de film, un magnéto qui joue tes morceaux, un carnet qui garde ce que tu viens de jouer, et une petite ville en pixels de l'autre côté de l'eau.</span><span class="en">A free firmware for the M-VAVE FM-1 synth. Sounds made for film music, a tape player for your songs, a sketchbook that keeps what you just played, and a small pixel town across the water.</span></p>
+      <p class="note" style="margin:0 0 22px"><span class="fr">Par Alexis Arakis, compositeur, Bungle Society</span><span class="en">By Alexis Arakis, composer, Bungle Society</span> · <a href="https://www.youtube.com/@bunglesociety" target="_blank" rel="noopener">YouTube</a></p>
+      <div class="cta">
+        <a class="btn" href="https://bunglesociety.github.io/modular-one/install/" target="_blank" rel="noopener"><span class="fr">Installer</span><span class="en">Install</span></a>
+        <a class="btn ghost" href="https://bunglesociety.github.io/modular-one/carnet/" target="_blank" rel="noopener"><span class="fr">Ouvrir le Carnet</span><span class="en">Open the Carnet</span></a>
+        <a class="btn ghost" href="https://github.com/bunglesociety/modular-one" target="_blank" rel="noopener">GitHub</a>
+      </div>
+      <p class="note"><span class="fr">Gratuit et libre (GPL-3.0). Version bêta. Chrome ou Edge sur ordinateur.</span><span class="en">Free and open source (GPL-3.0). Beta. Chrome or Edge on a computer.</span></p>
+    </div>
+    <div class="screen">
+      <img src="https://bunglesociety.github.io/modular-one/img/ville.gif" alt="Modular Town" width="240" height="240">
+      <div class="lbl"><span><span class="led"></span>M-VAVE FM-1</span><span>MODULAR TOWN</span></div>
+    </div>
+  </div>
+
+  <div class="family">
+    <span class="grow"><b><span class="fr">La famille Modular :</span><span class="en">The Modular family:</span></b> <span class="fr">Modular Town, le synthé-ville pour ton ordinateur (un patch gratuit pour Amorph, le plugin d'Artists in DSP). Modular One en est le petit frère sur le FM-1. Modular Koi fait du FM-1 un tambour à languettes. Modular Compagnon vit sur le clavier SMK-37.</span><span class="en">Modular Town, the town-synth for your computer (a free patch for Amorph, the plugin by Artists in DSP). Modular One is its little brother on the FM-1. Modular Koi turns the FM-1 into a steel tongue drum. Modular Compagnon lives on the SMK-37 keyboard.</span></span>
+    <a href="https://amorph.audio/patches/modular-town-v3/" target="_blank" rel="noopener">Modular Town →</a>
+    <a href="https://bunglesociety.github.io/modular-koi/" target="_blank" rel="noopener">Modular Koi →</a>
+    <a href="https://bunglesociety.github.io/modular-compagnon/" target="_blank" rel="noopener">Modular Compagnon →</a>
+  </div>
+
+  <section>
+    <h2 class="px"><span class="fr">Un banc, un synthé, une ville</span><span class="en">A bench, a synth, a town</span></h2>
+    <div class="story"><p><span class="fr">Dans le plugin Modular Town, on regarde un monde vivre à travers l'interface. Modular One fait l'inverse : on s'installe sur un banc avec le FM-1, on joue, et la ville en face réagit. L'heure, la lumière et l'eau suivent le son.</span><span class="en">In the Modular Town plugin, you watch a world live through the interface. Modular One turns it around: you sit on a bench with the FM-1, you play, and the town across the water answers. The hour, the light and the water follow the sound.</span></p><p><span class="fr">Tout est pensé pour écrire, pas pour programmer : une seule interface, les quatre verts des consoles portables d'époque, des sons prêts à l'emploi, et un carnet qui n'oublie rien.</span><span class="en">Everything is made for writing, not for programming: one interface, the four greens of the old handheld consoles, sounds ready to use, and a sketchbook that forgets nothing.</span></p></div>
+  </section>
+
+  <section>
+    <h2 class="px"><span class="fr">En vidéo</span><span class="en">On video (French, English subtitles)</span></h2>
+    <div class="video"><iframe src="https://www.youtube-nocookie.com/embed/uFcVOXPicuw" title="Modular One" loading="lazy"
+      allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>
+  </section>
+
+  <section>
+    <h2 class="px"><span class="fr">Ce qu'il y a dedans</span><span class="en">What's inside</span></h2>
+    <div class="feats">
+      <div class="feat"><img src="https://bunglesociety.github.io/modular-one/img/presets.png" alt="" width="240" height="240" loading="lazy"><div><h3 class="px"><span class="fr">40 sons de film</span><span class="en">40 film sounds</span></h3><p><span class="fr">Cinq familles : souffles, claviers doux, lumières, ombres et néon façon années 80. Prêts pour composer à l'image.</span><span class="en">Five families: breaths, soft keys, lights, shadows and 80's neon. Ready for scoring to picture.</span></p></div></div>
+      <div class="feat"><img src="https://bunglesociety.github.io/modular-one/img/home.png" alt="" width="240" height="240" loading="lazy"><div><h3 class="px"><span class="fr">Le carnet de croquis</span><span class="en">The sketchbook</span></h3><p><span class="fr">Le FM-1 écoute en permanence. Une idée te plaît ? Maintiens REC : il garde ta dernière phrase. Encore : une phrase plus loin.</span><span class="en">The FM-1 always listens. Like an idea? Hold REC: it keeps your last phrase. Again: one phrase further back.</span></p></div></div>
+      <div class="feat"><img src="https://bunglesociety.github.io/modular-one/img/magneto.png" alt="" width="240" height="240" loading="lazy"><div><h3 class="px"><span class="fr">Le magnéto</span><span class="en">The tape player</span></h3><p><span class="fr">OCT- et OCT+ ensemble : il joue tes morceaux et tes croquis en boucle, bobines qui tournent. Tu peux jouer par-dessus.</span><span class="en">OCT- and OCT+ together: it plays your songs and sketches in a loop, reels turning. You can play over it.</span></p></div></div>
+      <div class="feat"><img src="https://bunglesociety.github.io/modular-one/img/liste.png" alt="" width="240" height="240" loading="lazy"><div><h3 class="px"><span class="fr">Ta liste</span><span class="en">Your list</span></h3><p><span class="fr">Maintiens SEQ : la liste de tes morceaux et de tes croquis apparaît sur le magnéto. Le potard 1 choisit, REC deux fois efface, lâcher SEQ joue ton choix.</span><span class="en">Hold SEQ: the list of your songs and sketches shows over the tape player. Knob 1 chooses, REC twice erases, letting go of SEQ plays your choice.</span></p></div></div>
+      <div class="feat"><img src="https://bunglesociety.github.io/modular-one/img/fm.png" alt="" width="240" height="240" loading="lazy"><div><h3 class="px"><span class="fr">Un vrai moteur FM</span><span class="en">A real FM engine</span></h3><p><span class="fr">Le moteur du plugin Modular Town : modulateur avec feedback, second modulateur, delay ping-pong, réverbe à plaque et l'« île ».</span><span class="en">The Modular Town plugin's engine: modulator with feedback, a second modulator, ping-pong delay, plate reverb and the "island".</span></p></div></div>
+      <div class="feat"><img src="https://bunglesociety.github.io/modular-one/img/pistes.png" alt="" width="240" height="240" loading="lazy"><div><h3 class="px"><span class="fr">Trois pistes</span><span class="en">Three tracks</span></h3><p><span class="fr">Trois parties de synthé avec séquenceur et arpégiateur, hérités de Felucca. Sans batterie : ici, on écrit.</span><span class="en">Three synth parts with sequencer and arpeggiator, from Felucca. No drums: here, you write.</span></p></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="px"><span class="fr">L'installer</span><span class="en">Install it</span></h2>
+    <ol class="steps"><li><span class="fr">Ouvre la page d'installation dans Chrome ou Edge, sur ton ordinateur.</span><span class="en">Open the install page in Chrome or Edge, on your computer.</span></li><li><span class="fr">Branche le FM-1 en USB, directement, sans hub. Allume-le.</span><span class="en">Connect the FM-1 by USB, directly, no hub. Switch it on.</span></li><li><span class="fr">Clique Installer : la page lit d'abord ce qu'il y a sur ton FM-1 et sa version, puis te demande de confirmer. Environ deux minutes, sans rien débrancher.</span><span class="en">Click Install: the page first reads what is on your FM-1 and its version, then asks you to confirm. About two minutes, unplugging nothing.</span></li></ol>
+    <div class="after"><a class="btn" href="https://bunglesociety.github.io/modular-one/install/" target="_blank" rel="noopener"><span class="fr">Installer</span><span class="en">Install</span></a><span class="note" style="margin:0"><span class="fr">Ensuite, le Carnet envoie tes fichiers MIDI au FM-1 et récupère tes croquis.</span><span class="en">Then the Carnet sends your MIDI files to the FM-1 and gets your sketches back.</span> <span class="fr">La page refuse un appareil qui n'est pas un FM-1 : rien n'est écrit dessus.</span><span class="en">The page refuses a device that is not an FM-1: nothing is written to it.</span></span></div>
+  </section>
+
+  <section class="faq">
+    <h2 class="px">Questions</h2>
+    <details><summary><span class="fr">C'est gratuit ?</span><span class="en">Is it free?</span></summary><p><span class="fr">Oui. Modular One est un logiciel libre (GPL-3.0) : le code est sur GitHub, tu peux le lire, le modifier et le partager.</span><span class="en">Yes. Modular One is free software (GPL-3.0): the code is on GitHub, you can read it, change it and share it.</span></p></details>
+    <details><summary><span class="fr">Je peux revenir au firmware M-VAVE ?</span><span class="en">Can I go back to the M-VAVE firmware?</span></summary><p><span class="fr">Oui, avec l'outil officiel M-UPGRADE de M-VAVE et le firmware du FM-1 (m-vave.com, rubrique Downloads). La marche à suivre est sur la page d'installation.</span><span class="en">Yes, with M-VAVE's official M-UPGRADE tool and the FM-1 firmware (m-vave.com, Downloads). The steps are on the install page.</span></p></details>
+    <details><summary><span class="fr">Et mes presets actuels ?</span><span class="en">What about my current presets?</span></summary><p><span class="fr">Les presets faits avec le firmware d'origine sont perdus à l'installation, et on ne peut pas les exporter avant. Pense-y si tu y tiens.</span><span class="en">Presets made with the original firmware are lost when installing, and they cannot be exported first. Keep that in mind.</span></p></details>
+    <details><summary><span class="fr">Ça marche sur Mac, Windows, iPad ?</span><span class="en">Mac, Windows, iPad?</span></summary><p><span class="fr">Sur Mac, Windows et Linux, dans Chrome ou Edge. Pas dans Safari ni Firefox, et pas sur iPhone ou iPad : ils n'ont pas le MIDI web.</span><span class="en">Mac, Windows and Linux, in Chrome or Edge. Not Safari or Firefox, and not on iPhone or iPad: they have no Web MIDI.</span></p></details>
+    <details><summary><span class="fr">C'est risqué ?</span><span class="en">Is it risky?</span></summary><p><span class="fr">C'est une bêta non officielle, testée sur le FM-1 de l'auteur. Une installation interrompue se reprend en recliquant sur Installer. Dans le pire des cas, l'outil FM-1-transporter permet de récupérer la machine.</span><span class="en">It is an unofficial beta, tested on the author's FM-1. An interrupted install resumes by clicking Install again. At worst, the FM-1-transporter tool recovers the unit.</span></p></details>
+    <details><summary><span class="fr">Je peux mettre ma propre musique dans le magnéto ?</span><span class="en">Can I put my own music in the tape player?</span></summary><p><span class="fr">Oui : glisse tes fichiers .mid dans le Carnet, ils partent sur le FM-1. Jusqu'à 20 morceaux, tous les canaux jouent sur le son choisi.</span><span class="en">Yes: drop your .mid files in the Carnet and they go to the FM-1. Up to 20 songs; every channel plays on the chosen sound.</span></p></details>
+    <details><summary><span class="fr">Je peux passer à Modular Koi, et revenir ?</span><span class="en">Can I switch to Modular Koi, and back?</span></summary><p><span class="fr">Oui, quand tu veux : chaque page d'installation dit ce qu'il y a sur ton FM-1 avant d'écrire. Tes croquis et tes morceaux sont gardés au même endroit par les deux : tu les retrouves en changeant.</span><span class="en">Yes, whenever you like: each install page says what is on your FM-1 before writing. Both keep your sketches and songs in the same place: you find them again when you switch.</span></p></details>
+    <details><summary><span class="fr">Mon FM-1 est un modèle récent, ça marche ?</span><span class="en">My FM-1 is a recent one, does it work?</span></summary><p><span class="fr">Oui, depuis la 0.3. Les FM-1 vendus depuis fin 2026 (le logo imprimé sur la façade) ont une autre puce de mémoire : Modular One 0.3 la connaît. Les versions 0.1 et 0.2 ne la connaissaient pas : sur un FM-1 récent, elles ne gardaient rien et refusaient les mises à jour. Dans ce cas, la page d'installation explique comment le récupérer.</span><span class="en">Yes, from 0.3 on. FM-1s sold from late 2026 (the logo printed on the front) have another memory chip: Modular One 0.3 knows it. Versions 0.1 and 0.2 did not: on a recent FM-1 they kept nothing and refused updates. If that is your case, the install page explains how to recover it.</span></p></details>
+  </section>
+
+  <p class="foot"><span class="fr">Basé sur</span><span class="en">Based on</span> <a href="https://github.com/hugelton/Felucca" target="_blank" rel="noopener">Felucca</a> by Leo Kuroshita (@kurogedelic), <a href="https://hugelton.com" target="_blank" rel="noopener">Hügelton Instruments</a>. <span class="fr">Merci à lui du fond du cœur.</span><span class="en">Heartfelt thanks to him.</span><br>
+    <span class="fr">Logiciel libre GPL-3.0, sans garantie. Code source :</span><span class="en">Free software, GPL-3.0, no warranty. Source:</span> <a href="https://github.com/bunglesociety/modular-one" target="_blank" rel="noopener">github.com/bunglesociety/modular-one</a>. <span class="fr">M-VAVE et FM-1 sont des marques de leurs propriétaires. Modular One n'est ni fait ni soutenu par M-VAVE ou Hügelton Instruments.</span><span class="en">M-VAVE and FM-1 are trademarks of their respective owners. Modular One is not made or supported by M-VAVE or Hügelton Instruments.</span></p>
+</div>

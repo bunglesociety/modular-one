@@ -348,48 +348,64 @@ static void ui_input(void)
             if (!pl_pick_ms)
                 pl_cursor = pl_idx;
         }
-        if (demo_on) {                                  /* KNOB 1: the list pops up (the first click only shows it); */
-            int32_t st = panel_enc(EN_K1);              /* the choice plays when the knob rests 0.8 s */
-            if (st && pl_count) {
-                if (pl_list_ms && fm1_ms - pl_list_ms < PL_LIST_MS) {
-                    pl_cursor = (uint8_t)clamp((int32_t)pl_cursor + (st > 0 ? 1 : -1), 0, (int32_t)pl_count - 1);
-                    pl_pick_ms = (fm1_ms ? fm1_ms : 1u);
+        {   /* SEQ held: the tape's list (as Modular Koi's and Modular Compagnon's), over the deck, the tape playing or
+             * not. K1 chooses, REC asks to erase that sketch and REC again erases it, letting SEQ go plays the choice. A
+             * tap on SEQ is still its page */
+            static uint32_t seq_t0;
+            static uint8_t seq_used;
+            int seq_down = (fm1_in.buttons >> panel.btn[B_SEQ]) & 1u;
+            int32_t st = demo_on || seq_list ? panel_enc(EN_K1) : 0;   /* (playing: K1 is the list's only) */
+            if (seq_down && !seq_t0) {
+                seq_t0 = fm1_ms | 1u;
+            } else if (seq_down && !seq_list && fm1_ms - seq_t0 >= 350u) {
+                seq_list = 1;
+                seq_used = 0;
+                pl_cursor = (uint8_t)(demo_on ? pl_idx : 0u);
+                pl_del = 0;
+            } else if (!seq_down && seq_t0) {
+                seq_t0 = 0;
+                if (seq_list) {
+                    if (seq_used == 1u && pl_count) {               /* a piece chosen: it plays */
+                        if (demo_on) {
+                            pl_target = pl_cursor;
+                            demo_req = 6;
+                        } else {
+                            pl_start = pl_cursor;
+                            demo_req = 1;
+                        }
+                    }
+                    seq_list = 0;
+                    pl_del = 0;
                 } else {
-                    pl_cursor = pl_idx;
-                }
-                pl_list_ms = (fm1_ms ? fm1_ms : 1u);
-            }
-            if (pl_del && (fm1_ms - pl_del_ms > 4000u || st || pl_cursor + 1u != pl_del))
-                pl_del = 0;                             /* "erase?" lapses: 4 s, or the knob moved */
-            if (pl_list_ms && ((fm1_in.buttons >> panel.btn[B_REC]) & 1u || pl_del))
-                pl_list_ms = (fm1_ms ? fm1_ms : 1u);               /* the list stays up while REC is down or "erase?"
-                                                         * (the stamp is never ahead of fm1_ms: it was fm1_ms | 1) */
-            if (pl_list_ms && fm1_ms - pl_list_ms >= PL_LIST_MS)
-                pl_list_ms = 0;
-            if (pl_pick_ms && fm1_ms - pl_pick_ms > 800u) {
-                pl_pick_ms = 0;
-                if (pl_cursor != pl_idx) {
-                    pl_target = pl_cursor;
-                    demo_req = 6;
+                    open_family(FAM_SEQ);                          /* a tap: the sequencer's page */
                 }
             }
-        } else {
+            if (seq_list && st && pl_count) {
+                pl_cursor = (uint8_t)clamp((int32_t)pl_cursor + (st > 0 ? 1 : -1), 0, (int32_t)pl_count - 1);
+                pl_del = 0;
+                if (seq_used != 2u)
+                    seq_used = 1;
+            }
+            if (seq_list && ((pressed >> panel.btn[B_REC]) & 1u)) {  /* REC: erase this sketch? REC again: erased */
+                if (pl_cursor < pl_songs) {
+                    ui_message("SONGS: FROM THE COMPUTER");
+                } else if (pl_cursor < pl_count && pl_del == pl_cursor + 1u) {
+                    m1_del_req = (uint8_t)(pl_cursor + 1u);
+                    pl_del = 0;
+                } else if (pl_cursor < pl_count) {
+                    pl_del = (uint8_t)(pl_cursor + 1u);
+                    pl_del_ms = fm1_ms;
+                }
+                seq_used = 2;                                      /* (letting SEQ go plays nothing) */
+                ui.rec_t0 |= 2u;                                   /* (no tap, no hold for REC's other jobs) */
+            }
+            pl_list_ms = seq_list ? (fm1_ms | 1u) : 0u;            /* (ui_draw.c: the list up) */
             pl_pick_ms = 0;
-            pl_list_ms = 0;
-            pl_del = 0;
         }
+        if (!demo_on && !seq_list)
+            pl_del = 0;
     }
-    if (rec == BT_HOLD && demo_on && pl_list_ms) {      /* REC held in the player's list: erase the sketch? */
-        if (pl_cursor < pl_songs) {
-            ui_message("SONGS: FROM THE COMPUTER");
-        } else if (pl_del == pl_cursor + 1u) {          /* held again: erase it */
-            m1_del_req = (uint8_t)(pl_cursor + 1u);
-            pl_del = 0;
-            pl_list_ms = 0;
-        } else {
-            pl_del = (uint8_t)(pl_cursor + 1u);
-            pl_del_ms = fm1_ms;
-        }
+    if (seq_list) {                                     /* (REC belongs to the tape's list) */
     } else if (rec == BT_HOLD && fam != FAM_SEQ && fam != FAM_ARP && fam != FAM_TRK) {
         m1_keep_req = 1;                                /* REC held elsewhere: keep the last phrase (m1_book.c) */
     } else if (rec == BT_HOLD) {                        /* REC held on SEQ / ARP: "clear the sequence?", */
@@ -441,6 +457,7 @@ static void ui_input(void)
             transport_req = song.playing ? 2 : 1;
             break;
         case B_REC:                                     /* tap / hold: above */
+        case B_SEQ:                                     /* tap: its page, held: the tape's list (above) */
             break;
         case B_OCTDN:
         case B_OCTUP: {

@@ -210,15 +210,18 @@ int main(int argc, char **argv)
         demo_pos = 2000u * 441u;
         frame();
         save(dir, "92_player");
-        pl_list_ms = (fm1_ms - 100u) | 1u;              /* KNOB 1 turned: the list pops up */
+        seq_list = 1;                                   /* SEQ held: the list pops up */
         frame();
         save(dir, "93_player_list");
-        pl_del = 3;                                     /* REC held on CROQUIS 2: "erase?" */
+        pl_del = 3;                                     /* REC on CROQUIS 2: "erase?" */
         frame();
         save(dir, "94_player_erase");
         pl_del = 0;
-        pl_list_ms = 0;
         demo_on = 0;
+        pl_cursor = 0;                                  /* the tape stopped, SEQ held: the list over the deck */
+        frame();
+        save(dir, "95_list_stopped");
+        seq_list = 0;
     }
     printf("m1_ui: %u screens into %s\n", NPAGES + 10u, dir);
     return 0;

@@ -499,6 +499,7 @@ static volatile uint8_t pl_target;       /* the piece chosen in the list */
 static uint8_t pl_cursor;                /* the list's cursor (UI) */
 static uint32_t pl_pick_ms;              /* KNOB 1 last turned (UI): the choice plays 0.8 s later */
 static uint32_t pl_list_ms;
+static uint8_t seq_list;                 /* SEQ held: the tape's list is up (ui_input.c), playing or not */
 static uint8_t pl_songs;                 /* the songs come first in the list, the sketches after (m1_book.c) */
 static uint8_t pl_start;                 /* where the player starts (0; after an erase, where it was) */
 static uint8_t pl_del;                   /* UI: erase asked for piece pl_del - 1, REC held again confirms */

@@ -28,7 +28,8 @@ Hügelton Instruments ou par M-VAVE.
   son. Elle sert aussi d'écran de veille.
 - **Le magnéto** : OCT- et OCT+ maintenus ensemble 1 seconde. Il joue tes morceaux (fichiers
   MIDI envoyés depuis l'ordinateur) et tes croquis, à la suite et en boucle, sur le son en cours, avec un magnéto à bandes
-  à l'écran. Le POTARD 1 fait apparaître la liste pour choisir un morceau ou un croquis, OCT+ morceau suivant, OCT-
+  à l'écran. Maintiens SEQ pour voir la liste des morceaux et des croquis (en lecture ou non) : le POTARD 1 choisit, REC deux
+  fois efface un croquis, lâcher SEQ joue ton choix. OCT+ morceau suivant, OCT-
   retour au début, OCT- deux fois morceau précédent. On peut jouer par-dessus. Le même geste, ou
   HOME, l'arrête. Un premier morceau à essayer : `examples/01_satie_gymnopedie_1.mid` (Erik Satie,
   domaine public).
@@ -50,6 +51,11 @@ Tous les détails (pages, potards, notes techniques) : [MODULAR_TOWN.md](MODULAR
 **Le plus simple : [bunglesociety.github.io/modular-one](https://bunglesociety.github.io/modular-one/)**,
 dans Chrome ou Edge sur un ordinateur. Branchez le FM-1 en USB, cliquez Installer, attendez environ
 deux minutes. Le même site propose l'app **Carnet** pour les morceaux et les croquis.
+
+**FM-1 récents** (vendus depuis fin 2026, le logo imprimé sur la façade) : ils ont une autre puce de mémoire
+(UC25HQ80, JEDEC 0xB36014 ; les premiers : Puya P25Q80, 0x856014). Modular One connaît les deux depuis la 0.3. Sur
+un FM-1 récent, la 0.1 et la 0.2 ne gardaient rien et refusaient les mises à jour : maintenez OCT- et OCT+
+5 secondes (mode téléchargement) et récupérez-le avec un outil de secours.
 
 Avant d'installer :
 

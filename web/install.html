@@ -39,6 +39,9 @@
   .bar { height: 10px; background: var(--paper); margin-top: 16px; }
   .bar i { display: block; height: 100%; width: 0; background: var(--ink); transition: width .2s; }
   #status { margin-top: 12px; min-height: 1.6em; font-weight: 600; }
+  #who { margin: 12px 0 0; min-height: 1.6em; }
+  #who.bad { font-weight: 600; }
+  button.ghost { background: transparent; color: var(--ink); outline: 3px solid var(--ink); outline-offset: -3px; margin-right: 12px; }
   details { margin-top: 10px; font-size: 12px; color: var(--dim); }
   pre { white-space: pre-wrap; font-size: 11.5px; margin: 6px 0 0; max-height: 180px; overflow: auto; }
   .after { display: none; }
@@ -64,7 +67,9 @@
       <li data-t="s3"></li>
       <li data-t="s4"></li>
     </ol>
+    <button id="check" class="ghost" data-t="check"></button>
     <button id="go" disabled data-t="install"></button>
+    <p id="who"></p>
     <div class="bar"><i id="bar"></i></div>
     <p id="status"></p>
     <details><summary data-t="details"></summary><pre id="log"></pre></details>
@@ -83,6 +88,7 @@
     <p class="small" data-t="presets"></p>
     <p class="small" data-t="back"></p>
     <p class="small"><a href="https://www.m-vave.com/download" target="_blank" rel="noopener">www.m-vave.com/download</a></p>
+    <p class="small" data-t="newchip"></p>
     <p class="small"><span data-t="brick"></span>
       <a href="https://github.com/kurogedelic/FM-1-transporter" target="_blank" rel="noopener">FM-1-transporter</a></p>
   </div>
@@ -105,13 +111,14 @@ const TEXT = {
     s4: "Clique Installer, autorise le MIDI quand Chrome le demande, et ne débranche rien jusqu'à « Terminé » (environ 2 minutes).",
     install: "Installer", details: "Détails techniques",
     nextTitle: "Et maintenant ?",
-    next1: "Le FM-1 redémarre sur Modular One. Joue, puis maintiens REC pour garder ta dernière phrase dans le carnet. OCT- et OCT+ maintenus ensemble 1 seconde lancent le magnéto.",
+    next1: "Le FM-1 redémarre sur Modular One. Joue, puis maintiens REC pour garder ta dernière phrase dans le carnet. OCT- et OCT+ maintenus ensemble 1 seconde lancent le magnéto. SEQ maintenu : la liste du magnéto (K1 choisit, REC deux fois efface un croquis, lâcher SEQ joue ton choix).",
     next2: "Ouvrir le Carnet : envoie tes fichiers MIDI au FM-1 et récupère tes croquis →",
     next3: "Lire le guide complet →",
     riskTitle: "À lire avant",
     beta: "Modular One est une version bêta, non officielle. Elle peut avoir des bugs. Tu l'installes à tes risques : l'auteur ne peut pas être tenu responsable d'un problème sur ton FM-1.",
     presets: "L'installation remplace le firmware M-VAVE : les presets que tu as faits avec le firmware d'origine seront perdus, et on ne peut pas les exporter avant.",
     back: "Pour revenir au firmware officiel : l'outil de mise à jour M-VAVE, M-UPGRADE (Downloads → PC Software → M-UPGRADE), et le firmware officiel du FM-1 (PC Firmware).",
+    newchip: "Les FM-1 récents (vendus depuis fin 2026, le logo imprimé sur la façade) ont une autre puce de mémoire. Modular One 0.3 et Modular Koi 0.1 la connaissent. Un FM-1 récent qui a reçu Modular One 0.2 ou plus ancien ne garde rien et refuse les mises à jour : il faut le passer en mode téléchargement (OCT- et OCT+ maintenus 5 secondes) et le récupérer avec l'outil ci-dessous.",
     brick: "Si une installation échoue et que le FM-1 ne démarre plus, il faut un Transporter pour le récupérer :",
     based: "Basé sur", license: "GPL-3.0, sans garantie. Code source :",
     nomidi: "Ce navigateur ne peut pas le faire. Ouvre la page dans Chrome ou Edge.", loadfail: "Impossible de charger : ",
@@ -119,10 +126,22 @@ const TEXT = {
     reboot: "Redémarrage", done: "Terminé ! Modular One est installé.", stopped: "Arrêté. Rebranche le câble USB et clique encore sur Installer.",
     error: "Erreur : ",
     denied: "Le MIDI (SysEx) n'a pas été autorisé. Autorise le MIDI dans les réglages du site (à gauche de l'adresse) et clique encore sur Installer.",
+    check: "Lire le FM-1",
+    onDev: "Sur ton FM-1 : ",
+    onOther: "L'appareil branché : ",
+    v_ota: "Il est en mode mise à jour : Installer finit l'écriture.",
+    v_same: "C'est déjà cette version ({v}). Tu peux la réinstaller.",
+    v_update: "Installer le met à jour en {name} {v}.",
+    v_older: "Une version plus récente est installée. Installer {name} {v} revient en arrière.",
+    v_replace: "Installer {name} {v} le remplacera.",
+    v_fresh: "Installer {name} {v} le remplacera (les presets du firmware d'origine seront perdus).",
+    v_otherModel: "Ce n'est pas un FM-1 : ce firmware ne peut pas aller dessus, rien ne sera écrit.",
+    checking: "Lecture de l'appareil…",
+    confirm: "Installer Modular One sur le FM-1 ?",
     notfound: "FM-1 introuvable. Vérifie le câble USB (un câble de données), ferme les autres apps MIDI, et clique encore sur Installer.",
     model: "L'appareil branché n'est pas un FM-1.",
     lost: "La connexion USB a été perdue. Rebranche et clique encore sur Installer.",
-    noloader: "Le FM-1 en mode mise à jour est introuvable. Rebranche le câble USB et clique encore sur Installer (il reste en mode mise à jour jusqu'à la fin).",
+    noloader: "Le FM-1 en mode mise à jour est introuvable. Rebranche le câble USB et clique encore sur Installer (il reste en mode mise à jour jusqu'à la fin). Un FM-1 récent (logo imprimé sur la façade) avec Modular One 0.2 ou plus ancien refuse les mises à jour : voir « À lire avant ».",
     noreturn: "Le FM-1 n'est pas revenu. Éteins-le et rallume-le.",
     mismatch: "Écrit, mais le FM-1 annonce une autre version : ",
     badpkg: "Le fichier à installer est abîmé. Recharge la page.",
@@ -136,13 +155,14 @@ const TEXT = {
     s4: "Click Install, allow MIDI when Chrome asks, and unplug nothing until \"Done\" (about 2 minutes).",
     install: "Install", details: "Technical details",
     nextTitle: "What now?",
-    next1: "The FM-1 restarts on Modular One. Play, then hold REC to keep your last phrase in the sketchbook. Hold OCT- and OCT+ together for 1 second to start the tape player.",
+    next1: "The FM-1 restarts on Modular One. Play, then hold REC to keep your last phrase in the sketchbook. Hold OCT- and OCT+ together for 1 second to start the tape player. SEQ held: the tape's list (K1 chooses, REC twice erases a sketch, letting go of SEQ plays your choice).",
     next2: "Open the Carnet: send your MIDI files to the FM-1 and get your sketches back →",
     next3: "Read the full guide (French) →",
     riskTitle: "Read this first",
     beta: "Modular One is an unofficial beta. It may have bugs. You install it at your own risk: the author cannot be held responsible for any problem with your FM-1.",
     presets: "Installing replaces the M-VAVE firmware: the presets you made with the original firmware will be lost, and they cannot be exported first.",
     back: "To go back to the official firmware: M-VAVE's updater, M-UPGRADE (Downloads → PC Software → M-UPGRADE), and the official FM-1 firmware (PC Firmware).",
+    newchip: "Recent FM-1s (sold from late 2026, the logo printed on the front) have another memory chip. Modular One 0.3 and Modular Koi 0.1 know it. A recent FM-1 that got Modular One 0.2 or older keeps nothing and refuses updates: put it in download mode (OCT- and OCT+ held 5 seconds) and recover it with the tool below.",
     brick: "If an install fails and the FM-1 no longer starts, recovering it needs a Transporter:",
     based: "Based on", license: "GPL-3.0, no warranty. Source:",
     nomidi: "This browser cannot do it. Open the page in Chrome or Edge.", loadfail: "Could not load: ",
@@ -150,10 +170,22 @@ const TEXT = {
     reboot: "Restarting", done: "Done! Modular One is installed.", stopped: "Stopped. Replug the USB cable and click Install again.",
     error: "Error: ",
     denied: "MIDI (SysEx) access was not allowed. Allow MIDI in the site settings (left of the address) and click Install again.",
+    check: "Read the FM-1",
+    onDev: "On your FM-1: ",
+    onOther: "The connected device: ",
+    v_ota: "It is in update mode: Install finishes the writing.",
+    v_same: "This version is already installed ({v}). You can install it again.",
+    v_update: "Install updates it to {name} {v}.",
+    v_older: "A newer version is installed. Installing {name} {v} goes back.",
+    v_replace: "Installing {name} {v} replaces it.",
+    v_fresh: "Installing {name} {v} replaces it (the original firmware's presets will be lost).",
+    v_otherModel: "Not an FM-1: this firmware cannot go on it, nothing will be written.",
+    checking: "Reading the device…",
+    confirm: "Install Modular One on the FM-1?",
     notfound: "FM-1 not found. Check the USB cable (a data cable), close other MIDI apps, and click Install again.",
     model: "The connected device is not an FM-1.",
     lost: "The USB connection was lost. Replug it and click Install again.",
-    noloader: "The FM-1 in update mode was not found. Replug the USB cable and click Install again (it stays in update mode until it is finished).",
+    noloader: "The FM-1 in update mode was not found. Replug the USB cable and click Install again (it stays in update mode until it is finished). A recent FM-1 (logo printed on the front) with Modular One 0.2 or older refuses updates: see \"Read this first\".",
     noreturn: "The FM-1 did not come back. Switch it off and on.",
     mismatch: "Written, but the FM-1 reports another version: ",
     badpkg: "The file to install is damaged. Reload the page.",
@@ -170,6 +202,7 @@ function applyLang() {
   document.querySelectorAll("[data-lang]").forEach((a) => a.classList.toggle("on", a.dataset.lang === lang));
   document.title = t("title");
   if (lastKey) $("status").textContent = t(lastKey) + lastArg;
+  if (typeof sayDev === "function") sayDev();
 }
 document.querySelectorAll("[data-lang]").forEach((a) => a.addEventListener("click", () => { lang = a.dataset.lang; try { localStorage.setItem("m1lang", lang); } catch {} applyLang(); }));
 applyLang();
@@ -185,9 +218,14 @@ window.addEventListener("beforeunload", (e) => { if (writing) { e.preventDefault
 (async () => {
   if (!navigator.requestMIDIAccess) { sayK("nomidi"); return; }
   try {
-    const r = await fetch(meta.pkg);
-    if (!r.ok) throw new Error(`${meta.pkg}: HTTP ${r.status}`);
-    const pkg = new Uint8Array(await r.arrayBuffer());
+    let pkg;
+    if (meta.b64) {                                     /* one file opened from the disk: the package inside it */
+      pkg = Uint8Array.from(atob(meta.b64), (c) => c.charCodeAt(0));
+    } else {
+      const r = await fetch(meta.pkg);
+      if (!r.ok) throw new Error(`${meta.pkg}: HTTP ${r.status}`);
+      pkg = new Uint8Array(await r.arrayBuffer());
+    }
     if (productOf(pkg) !== meta.product) { sayK("badpkg"); return; }
     image = logicalImage(pkg);
     sayK("ready", meta.version);
@@ -195,15 +233,49 @@ window.addEventListener("beforeunload", (e) => { if (writing) { e.preventDefault
   } catch (e) { sayK("loadfail", e.message); }
 })();
 
+var found = null;                                            /* the last reading of the device (fm1probe.js) */
+const vText = (v) => t("v_" + v.key).replace("{name}", meta.name || "Modular One").replace("{v}", meta.version);
+function sayDev() {
+  if (!found) return;
+  $("who").textContent = found.dev ? t(found.v.ok ? "onDev" : "onOther") + devLabel(found.dev, lang) + ". " + vText(found.v) : t("notfound");
+  $("who").className = found.v && !found.v.ok ? "bad" : "";
+}
+async function midi() {
+  try { return await navigator.requestMIDIAccess({ sysex: true }); }
+  catch (e) { sayK("denied"); return null; }
+}
+async function readDev(m) {
+  $("who").textContent = t("checking");
+  $("who").className = "";
+  const dev = await probe(new Updater(m, log));
+  found = { dev, v: dev ? verdict(dev, { family: "one", version: meta.version, product: meta.product }) : null };
+  if (dev) log(`device: ${dev.id.text} / ${dev.info ?? "(no INFO)"} -> ${dev.family} ${dev.version}: ${found.v.key}`);
+  sayDev();
+  return found;
+}
+$("check").addEventListener("click", async () => {
+  if (writing) return;
+  const m = await midi();
+  if (!m) return;
+  $("check").disabled = true;
+  try { await readDev(m); } catch (e) { $("who").textContent = t("error") + (e && e.message); }
+  $("check").disabled = false;
+});
+
 $("go").addEventListener("click", async () => {
+  if (writing || !image) return;
   $("go").disabled = true;
   $("after").classList.remove("on");
-  let midi;
-  try { midi = await navigator.requestMIDIAccess({ sysex: true }); }
-  catch (e) { sayK("denied"); $("go").disabled = false; return; }
+  const midi0 = await midi();
+  if (!midi0) { $("go").disabled = false; return; }
+  let f = null;                                               /* first what is on it: may it go there? */
+  try { f = await readDev(midi0); } catch (e) { $("who").textContent = t("error") + (e && e.message); }
+  if (!f || !f.dev) { sayK("notfound"); $("go").disabled = false; return; }
+  if (!f.v.ok) { sayK("model"); $("go").disabled = false; return; }
+  if (!confirm(t("onDev") + devLabel(f.dev, lang) + ".\n" + vText(f.v) + "\n\n" + t("confirm"))) { $("go").disabled = false; return; }
   writing = true;
   try {
-    const up = new Updater(midi, log);
+    const up = new Updater(midi0, log);
     const total = 74 + 1167;
     const step = (k, a) => {
       log(`${k} ${a ?? ""}`);

@@ -253,7 +253,12 @@ static void persist_boot(void)                    /* before settings_init / pane
 #if FELUCCA_FLASH
     persist_t p;
     uint32_t f = irq_save();
-    flash_ok = FL_FAR(fl_jedec_ram)() == 0x856014u;       /* the expected 1 MiB part, else stay RAM-only */
+    {   /* Puya P25Q80 0x856014 (the first FM-1s) or UC25HQ80 0xB36014 (FM-1s sold from late 2026, the logo printed on
+         * the front): same size, same generic commands (upstream Felucca f4cbb6a, #320). Another part: RAM-only, and
+         * no update (ota_session needs flash_ok) */
+        uint32_t id = FL_FAR(fl_jedec_ram)();
+        flash_ok = id == 0x856014u || id == 0xB36014u;
+    }
     irq_restore(f);
     if (!flash_ok)
         return;

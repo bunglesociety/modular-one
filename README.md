@@ -26,7 +26,8 @@ Hügelton Instruments or by M-VAVE.
   Also used as a screen saver.
 - **The tape player**: hold OCT- and OCT+ together for 1 second. It plays your songs (MIDI files
   sent from the computer) and your sketches, one after the other and round again, on the current sound, with a
-  reel-to-reel tape recorder on screen. KNOB 1 pops up the list to choose a song or a sketch, OCT+ next, OCT- back to the
+  reel-to-reel tape recorder on screen. Hold SEQ to see the list of songs and sketches (playing or not): KNOB 1 chooses, REC twice erases a sketch,
+  letting go of SEQ plays the choice. OCT+ next, OCT- back to the
   start, OCT- twice the previous one. You can play over it. Same gesture or HOME to stop.
   A first song to try: `examples/01_satie_gymnopedie_1.mid` (Erik Satie, public domain).
 - **The sketchbook**: the FM-1 always listens. Liked what you just played? Hold REC: it keeps your
@@ -45,6 +46,10 @@ Full details (pages, knobs, technical notes): [MODULAR_TOWN.md](MODULAR_TOWN.md)
 **The easy way: [bunglesociety.github.io/modular-one](https://bunglesociety.github.io/modular-one/)**,
 in Chrome or Edge on a computer. Connect the FM-1 by USB, click Install, wait about two minutes.
 The same site has the **Carnet** app for your songs and sketches.
+
+**Recent FM-1s** (sold from late 2026, the logo printed on the front) have another flash chip (UC25HQ80, JEDEC
+0xB36014; the first units: Puya P25Q80, 0x856014). Modular One knows both from 0.3 on. On a recent FM-1, 0.1 and
+0.2 kept nothing and refused updates: hold OCT- and OCT+ 5 seconds (download mode) and recover it with a rescue tool.
 
 Before installing:
 

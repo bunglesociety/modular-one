@@ -307,7 +307,8 @@ def main():
         if not m:
             raise SystemExit(f"--release {a.release}: use X.Y or X.Y-suffix, one digit each")
         PRODUCT = "FM-1_9" + m[1] + m[2]
-        VERSION = a.release.upper() if "BETA" in a.release.upper() else a.release.upper() + " BETA"
+        VERSION = "M1 " + (a.release.upper() if "BETA" in a.release.upper() else a.release.upper() + " BETA")   # INFO:
+        # "FELUCCA M1 0.3 BETA": the install pages know Modular One and its version by it (web/fm1probe.js)
         name = f"felucca-{a.release}.fwsc"
     fm1pkg_make.SDK = a.sdk
     for rel, sha in SDK_SHA256.items():          # fail early without the SDK

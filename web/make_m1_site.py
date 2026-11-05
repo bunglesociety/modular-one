@@ -36,8 +36,9 @@ def main(pkg, version, out):
     name = f"modular-one-{re.sub(r'[^A-Za-z0-9.-]', '-', version)}.fwsc"
     html = (HERE / "install.html").read_text(encoding="utf-8")
     lib = strip_module((HERE / "fm1pkg.js").read_text(encoding="utf-8")) + "\n" + \
-        strip_module((HERE / "fm1ota.js").read_text(encoding="utf-8"))
-    meta = json.dumps({"version": version, "product": product, "pkg": "../firmware/" + name})
+        strip_module((HERE / "fm1ota.js").read_text(encoding="utf-8")) + "\n" + \
+        strip_module((HERE / "fm1probe.js").read_text(encoding="utf-8"))
+    meta = json.dumps({"version": version, "product": product, "family": "one", "name": "Modular One", "pkg": "../firmware/" + name})
     for mark in ("/*LIB*/", "/*META*/"):
         if html.count(mark) != 1:
             raise SystemExit(f"install.html must contain {mark} once")

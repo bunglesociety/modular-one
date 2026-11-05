@@ -134,14 +134,15 @@ et reprend au début après le dernier : il tourne en boucle jusqu'à ce que tu 
 L'écran montre un magnéto à bandes vu de dessus : les deux bobines tournent et la bande passe
 de l'une à l'autre au fil du morceau. Pendant la lecture :
 
-- **POTARD 1** : fait apparaître la liste des morceaux et des croquis ; tourne pour choisir, le
-  morceau choisi démarre quand tu lâches le potard, et la liste disparaît 5 secondes après ;
+- **SEQ maintenu** : la liste des morceaux et des croquis apparaît sur le magnéto (même à l'arrêt) ;
+  le POTARD 1 choisit, et le morceau choisi démarre quand tu lâches SEQ. Un simple appui sur SEQ
+  ouvre toujours sa page ;
 - **OCT+** : morceau suivant ;
 - **OCT-** : retour au début du morceau ; **deux fois** : morceau précédent ;
 - **OCT- et OCT+ ensemble 1 seconde**, ou **HOME** : stop.
-- **Effacer un croquis** : ouvre la liste avec le POTARD 1, place-toi sur le croquis et maintiens
-  **REC** ; la ligne demande confirmation, maintiens **REC** encore une fois pour l'effacer (OCT- ou
-  OCT+, ou tourner le potard, annule). Les croquis suivants gardent leur numéro, la lecture
+- **Effacer un croquis** : maintiens SEQ, place-toi sur le croquis avec le POTARD 1 et appuie sur
+  **REC** ; la ligne demande « ERASE ? », appuie sur **REC** encore une fois pour l'effacer (tourner
+  le potard annule ; lâcher SEQ ne joue rien après un effacement). Les croquis suivants gardent leur numéro, la lecture
   reprend au même endroit. Les morceaux envoyés depuis l'ordinateur s'effacent depuis l'ordinateur.
 
 Pendant la lecture, OCT- et OCT+ ne changent plus l'octave du clavier ; tu peux jouer par-dessus,
