@@ -53,7 +53,8 @@ dans Chrome ou Edge sur un ordinateur. Branchez le FM-1 en USB, cliquez Installe
 deux minutes. Le même site propose l'app **Carnet** pour les morceaux et les croquis.
 
 **FM-1 récents** (vendus depuis fin 2026, le logo imprimé sur la façade) : ils ont une autre puce de mémoire
-(UC25HQ80, JEDEC 0xB36014 ; les premiers : Puya P25Q80, 0x856014). Modular One connaît les deux depuis la 0.3. Sur
+(UC25HQ80, JEDEC 0xB36014 ; les premiers : Puya P25Q80, 0x856014). Modular One reconnaît les deux depuis la 0.3
+(compatible, comme Felucca et d'autres firmwares ; pas encore testé par l'auteur sur un FM-1 récent : vos retours sont bienvenus). Sur
 un FM-1 récent, la 0.1 et la 0.2 ne gardaient rien et refusaient les mises à jour : maintenez OCT- et OCT+
 5 secondes (mode téléchargement) et récupérez-le avec un outil de secours.
 

@@ -48,7 +48,8 @@ in Chrome or Edge on a computer. Connect the FM-1 by USB, click Install, wait ab
 The same site has the **Carnet** app for your songs and sketches.
 
 **Recent FM-1s** (sold from late 2026, the logo printed on the front) have another flash chip (UC25HQ80, JEDEC
-0xB36014; the first units: Puya P25Q80, 0x856014). Modular One knows both from 0.3 on. On a recent FM-1, 0.1 and
+0xB36014; the first units: Puya P25Q80, 0x856014). Modular One recognises both from 0.3 on
+(compatible, as upstream Felucca and other firmwares; not yet tested by the author on a recent unit: reports welcome). On a recent FM-1, 0.1 and
 0.2 kept nothing and refused updates: hold OCT- and OCT+ 5 seconds (download mode) and recover it with a rescue tool.
 
 Before installing:
