@@ -462,7 +462,8 @@ const TEXT = {
     beta: "Modular One est une version bêta, non officielle. Elle peut avoir des bugs. Tu l'installes à tes risques : l'auteur ne peut pas être tenu responsable d'un problème sur ton FM-1.",
     presets: "L'installation remplace le firmware M-VAVE : les presets que tu as faits avec le firmware d'origine seront perdus, et on ne peut pas les exporter avant.",
     back: "Pour revenir au firmware officiel : l'outil de mise à jour M-VAVE, M-UPGRADE (Downloads → PC Software → M-UPGRADE), et le firmware officiel du FM-1 (PC Firmware).",
-    newchip: "Les FM-1 récents (vendus depuis fin 2026, le logo imprimé sur la façade) ont une autre puce de mémoire. Modular One 0.3 et Modular Koi 0.1 la reconnaissent (compatibles, pas encore testés par l\'auteur sur un FM-1 récent). Un FM-1 récent qui a reçu Modular One 0.2 ou plus ancien ne garde rien et refuse les mises à jour : il faut le passer en mode téléchargement (OCT- et OCT+ maintenus 5 secondes) et le récupérer avec l'outil ci-dessous.",
+    newchip: "Les FM-1 récents (vendus depuis fin 2026, le logo imprimé sur la façade) ont une autre puce de mémoire. Modular One 0.3 et Modular Koi 0.1 la reconnaissent, mais l'auteur n'a pas pu les tester sur un FM-1 récent : si tu en as un, tu installes sans garantie. Au pire, il ne garde rien et refuse les mises à jour : il faut alors le passer en mode téléchargement (OCT- et OCT+ maintenus 5 secondes) et le récupérer avec l'outil ci-dessous. C'est aussi ce qui arrive à un FM-1 récent passé en Modular One 0.2 ou plus ancien.",
+    recent: "FM-1 récent (logo imprimé sur la façade, vendu depuis fin 2026) ? Modular One n'a pas encore été testé dessus par l'auteur. Il devrait fonctionner, mais sans garantie : au pire, il ne garde rien et refuse les mises à jour, et le FM-1 se récupère en mode téléchargement (OCT- et OCT+ maintenus 5 secondes).",
     brick: "Si une installation échoue et que le FM-1 ne démarre plus, il faut un Transporter pour le récupérer :",
     based: "Basé sur", license: "GPL-3.0, sans garantie. Code source :",
     nomidi: "Ce navigateur ne peut pas le faire. Ouvre la page dans Chrome ou Edge.", loadfail: "Impossible de charger : ",
@@ -506,7 +507,8 @@ const TEXT = {
     beta: "Modular One is an unofficial beta. It may have bugs. You install it at your own risk: the author cannot be held responsible for any problem with your FM-1.",
     presets: "Installing replaces the M-VAVE firmware: the presets you made with the original firmware will be lost, and they cannot be exported first.",
     back: "To go back to the official firmware: M-VAVE's updater, M-UPGRADE (Downloads → PC Software → M-UPGRADE), and the official FM-1 firmware (PC Firmware).",
-    newchip: "Recent FM-1s (sold from late 2026, the logo printed on the front) have another memory chip. Modular One 0.3 and Modular Koi 0.1 recognise it (compatible, not yet tested by the author on a recent FM-1). A recent FM-1 that got Modular One 0.2 or older keeps nothing and refuses updates: put it in download mode (OCT- and OCT+ held 5 seconds) and recover it with the tool below.",
+    newchip: "Recent FM-1s (sold from late 2026, the logo printed on the front) have another memory chip. Modular One 0.3 and Modular Koi 0.1 recognise it, but the author could not test them on a recent FM-1: if you have one, you install with no guarantee. At worst it keeps nothing and refuses updates: put it in download mode (OCT- and OCT+ held 5 seconds) and recover it with the tool below. That is also what happens to a recent FM-1 that got Modular One 0.2 or older.",
+    recent: "Recent FM-1 (logo printed on the front, sold from late 2026)? Modular One has not been tested on it by the author yet. It should work, but with no guarantee: at worst it keeps nothing and refuses updates, and the FM-1 can be recovered in download mode (OCT- and OCT+ held 5 seconds).",
     brick: "If an install fails and the FM-1 no longer starts, recovering it needs a Transporter:",
     based: "Based on", license: "GPL-3.0, no warranty. Source:",
     nomidi: "This browser cannot do it. Open the page in Chrome or Edge.", loadfail: "Could not load: ",
@@ -616,7 +618,7 @@ $("go").addEventListener("click", async () => {
   try { f = await readDev(midi0); } catch (e) { $("who").textContent = t("error") + (e && e.message); }
   if (!f || !f.dev) { sayK("notfound"); $("go").disabled = false; return; }
   if (!f.v.ok) { sayK("model"); $("go").disabled = false; return; }
-  if (!confirm(t("onDev") + devLabel(f.dev, lang) + ".\n" + vText(f.v) + "\n\n" + t("confirm"))) { $("go").disabled = false; return; }
+  if (!confirm(t("onDev") + devLabel(f.dev, lang) + ".\n" + vText(f.v) + "\n\n" + t("recent") + "\n\n" + t("confirm"))) { $("go").disabled = false; return; }
   writing = true;
   try {
     const up = new Updater(midi0, log);
