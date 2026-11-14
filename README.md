@@ -92,3 +92,5 @@ Same as Felucca: see [BUILDING.md](BUILDING.md). A French guide for macOS is in
   "M-VAVE" and "FM-1" are trademarks of their respective owners.
 
 Français : [LISEZMOI.md](LISEZMOI.md)
+
+You can also try Modular One in the browser, no flashing needed, in the free community [FM-1 Emulator](https://fm1-emulator.atst.tools/).
