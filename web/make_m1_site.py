@@ -29,8 +29,8 @@ def main(pkg, version, out):
     pkg, out = Path(pkg), Path(out)
     raw = pkg.read_bytes()
     product = product_of(raw)
-    if not re.fullmatch(r"FM-1_9\d\d", product):
-        raise SystemExit(f"{pkg}: identity {product!r} is not a Felucca package (FM-1_9xx)")
+    if not re.fullmatch(r"FM-1_\d\d\d", product):
+        raise SystemExit(f"{pkg}: identity {product!r} is not a Felucca package (FM-1_NNN)")
     if b"FELUCCA-LOADER-1" not in raw:
         raise SystemExit(f"{pkg}: no update loader in it")
     name = f"modular-one-{re.sub(r'[^A-Za-z0-9.-]', '-', version)}.fwsc"

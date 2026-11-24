@@ -65,13 +65,13 @@ Avant d'installer :
 3. Si une installation échoue et que le FM-1 ne démarre plus, l'outil de récupération est
    [FM-1-transporter](https://github.com/kurogedelic/FM-1-transporter).
 
-**En ligne de commande** à la place : téléchargez `modular-one-0.4.fwsc` (page Releases, ou
+**En ligne de commande** à la place : téléchargez `modular-one-0.4.1.fwsc` (page Releases, ou
 `docs/firmware/` dans ce dépôt), puis :
 
 ```
 pip3 install mido python-rtmidi
 python3 tools/fm1_install.py --info
-python3 tools/fm1_install.py modular-one-0.4.fwsc
+python3 tools/fm1_install.py modular-one-0.4.1.fwsc
 ```
 
 `--info` trouve seulement le FM-1 et n'écrit rien.
@@ -79,8 +79,8 @@ python3 tools/fm1_install.py modular-one-0.4.fwsc
 **Revenir en arrière** : réinstallez le firmware officiel avec l'outil M-UPGRADE de M-VAVE
 (m-vave.com, rubrique Downloads).
 
-SHA-256 de `modular-one-0.4.fwsc` :
-`f4366f21ca578f35a6118ed37ff63519d1c9e684f2fbe52800a95becf5a07901`
+SHA-256 de `modular-one-0.4.1.fwsc` :
+`d2c0af201a7e413fa0a8584fb9dcc99b9cac33c9aeedad50d1a64614184ff133`
 
 ## Compiler depuis les sources
 

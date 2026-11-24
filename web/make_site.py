@@ -12,7 +12,7 @@
 
   web/make_site.py build/felucca-X.Y.fwsc X.Y OUT_DIR
 
-The package identity (FM-1_9xx) is read from the package; the device reports it
+The package identity (FM-1_NNN) is read from the package; the device reports it
 after the install.
 """
 import json
@@ -39,8 +39,8 @@ def main(pkg, version, out):
     pkg, out = Path(pkg), Path(out)
     raw = pkg.read_bytes()
     product = product_of(raw)
-    if not re.fullmatch(r"FM-1_9\d\d", product):
-        raise SystemExit(f"{pkg}: identity {product!r} is not a Felucca package (FM-1_9xx)")
+    if not re.fullmatch(r"FM-1_\d\d\d", product):
+        raise SystemExit(f"{pkg}: identity {product!r} is not a Felucca package (FM-1_NNN)")
     if b"FELUCCA-LOADER-1" not in raw:              # marker of firmware/loader
         raise SystemExit(f"{pkg}: no Felucca update loader in it")
     html = (HERE / "index_pkg.html").read_text(encoding="utf-8")

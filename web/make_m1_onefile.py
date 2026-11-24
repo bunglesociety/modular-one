@@ -17,7 +17,7 @@ from make_site import product_of, strip_module   # noqa: E402
 def main(pkg, version, out):
     raw = Path(pkg).read_bytes()
     product = product_of(raw)
-    if not re.fullmatch(r"FM-1_9\d\d", product) or b"FELUCCA-LOADER-1" not in raw:
+    if not re.fullmatch(r"FM-1_\d\d\d", product) or b"FELUCCA-LOADER-1" not in raw:
         raise SystemExit(f"{pkg}: not a Modular One package ({product!r})")
     html = (HERE / "install.html").read_text(encoding="utf-8")
     lib = strip_module((HERE / "fm1pkg.js").read_text(encoding="utf-8")) + "\n" + \

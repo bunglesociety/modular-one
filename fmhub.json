@@ -1,0 +1,9 @@
+{
+  "what": "Modular One turns the FM-1 into a small film-scoring instrument: the sounds of the Modular Town plugin, a Game Boy green screen with a town that lives by day and night, a tape recorder with a sketchbook that keeps what you play, and a MIDI player. Simple and musical, made by a composer.",
+  "author": "Alexis Arakis (Bungle Society)",
+  "kinds": "synth",
+  "image": "docs/img/fmhub.png",
+  "color": "#9bbc0f",
+  "play": "https://bunglesociety.github.io/modular-one/",
+  "sounds": "CC0: Versilian Studios (VCSL, VSCO-2 CE), via Felucca's SAMPLE sets"
+}

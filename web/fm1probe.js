@@ -7,7 +7,7 @@
 //
 // The names the firmwares give (INFO):
 //   Modular Koi        "FELUCCA KOI 0.1"                 (tools/build.py --board koi --release 0.1)
-//   Modular One        "FELUCCA M1 0.3 BETA"             (0.3 on; before: "FELUCCA M1 0.1 BETA", "FELUCCA 0.2-BETA")
+//   Modular One        "FELUCCA M1 0.4.1 BETA"           (identity FM-1_891 from 0.4.1; 0.3: "FELUCCA M1 0.3 BETA", FM-1_903)
 //   Modular Compagnon  "FELUCCA MC 1.1"                  (1.1 on; 1.0: "FELUCCA v1.0", identity _900)
 //   Felucca            "FELUCCA v1.6.1"
 //   M-VAVE's own firmware gives an identity (MODEL_0NN) and no INFO.
@@ -47,8 +47,10 @@ export function verCmp(a, b) {
 export function classify(id, info) {
   if (/^ota-/i.test(id.model)) return { family: "ota", name: "", version: "" };
   const nnn = id.version, idver = nnn >= 900 ? `${Math.floor(nnn / 10) % 10}.${nnn % 10}` : "";
-  if (info == null)
-    return nnn < 900 ? { family: "stock", name: "M-VAVE", version: String(nnn).padStart(3, "0") }
+  const OWN = { 891: ["one", "Modular One"], 892: ["koi", "Modular Koi"], 893: ["compagnon", "Modular Compagnon"] };
+  if (info == null)          // (the Modular family's own identities, The Firmware Hub: FM-1_891 One, _892 Koi, _893 Compagnon)
+    return OWN[nnn] ? { family: OWN[nnn][0], name: OWN[nnn][1], version: "" }
+         : nnn < 800 ? { family: "stock", name: "M-VAVE", version: String(nnn).padStart(3, "0") }
                      : { family: "unknown", name: "", version: idver };
   const s = info.replace(/^FELUCCA\s*/i, "").trim();
   let m;
