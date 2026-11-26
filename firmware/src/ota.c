@@ -254,10 +254,31 @@ static int ota_ufw(uint8_t *hdr, uint32_t *fl_off, uint32_t *fl_len, uint32_t *o
     return 0;
 }
 
+/* The flash head's isd_config.ini carries each unit's own chip key (written at the factory), so it and its entry
+ * (its CRC) never equal a package's; the rest of the head (the SPL, the other entries) must. b, mine: the package's
+ * and the device's first 512 bytes; the same isd_config.ini entry (0x40: offset, size) in both -> its data range */
+#define OTA_HEAD_UNIT(a, off, len) ((len) && (((a) >= 0x40u && (a) < 0x60u) || ((a) >= (off) && (a) < (off) + (len))))
+static int ota_isd_entry(const uint8_t *p, uint32_t *off, uint32_t *len)
+{
+    uint8_t e[32];
+    uint32_t i;
+    for (i = 0; i < 32u; i++)
+        e[i] = p[0x40 + i];
+    ota_jl_enc(e, 32);
+    *off = ota_rd32(e + 4);
+    *len = ota_rd32(e + 8);
+    return ota_memeq(e + 16, (const uint8_t *)"isd_config.ini", 15) && *off >= 0x60u && *len && *off + *len <= 0x4000u;
+}
+static int ota_isd_skip(const uint8_t *b, const uint8_t *mine, uint32_t *off, uint32_t *len)
+{
+    uint32_t o2, l2;
+    return ota_isd_entry(b, off, len) && ota_isd_entry(mine, &o2, &l2) && o2 == *off && l2 == *len;
+}
+
 static int ota_stage(void)                       /* steps 1..6; 0 = host said success */
 {
     static uint8_t hdr[0x400], b[512], mine[512];
-    uint32_t i, n, ota_off, ota_len, fl_off, fl_len, c, len, own, official;
+    uint32_t i, n, ota_off, ota_len, fl_off, fl_len, c, len, own, official, isd_off = 0, isd_len = 0;
     int rc;
     /* 1. UFW header + entry list */
     ota_show(1, 0);
@@ -284,8 +305,11 @@ static int ota_stage(void)                       /* steps 1..6; 0 = host said su
         for (i = 0; i < 0x4000u; i += 512u) {
             if (ota_read(fl_off + i, b, 512) || ota_fread(i, mine, 512))
                 return -4;
-            if (!ota_memeq(b, mine, 512))
-                return -5;
+            if (!i && !ota_isd_skip(b, mine, &isd_off, &isd_len))
+                isd_off = isd_len = 0;                      /* not the same layout: every byte must match */
+            for (n = 0; n < 512u; n++)
+                if (b[n] != mine[n] && !OTA_HEAD_UNIT(i + n, isd_off, isd_len))
+                    return -5;
         }
     }
     /* 4. stage the package's loader: erase, body, verify, head last */
