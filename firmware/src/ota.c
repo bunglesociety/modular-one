@@ -58,13 +58,18 @@ static uint32_t ota_crc16(const uint8_t *p, uint32_t n, uint32_t c)   /* poly 0x
     return c;
 }
 
-static void ota_jl_enc(uint8_t *p, uint32_t n)   /* UFW header cipher, key 0xFFFF */
+static uint32_t ota_jl_enc_k(uint8_t *p, uint32_t n, uint32_t k)   /* JieLi ENC from key k; -> the next key */
 {
-    uint32_t k = 0xFFFFu;
     while (n--) {
         *p++ ^= (uint8_t)k;
         k = ((k << 1) ^ (k & 0x8000u ? 0x1021u : 0u)) & 0xFFFFu;
     }
+    return k;
+}
+
+static void ota_jl_enc(uint8_t *p, uint32_t n)   /* UFW header cipher, key 0xFFFF */
+{
+    ota_jl_enc_k(p, n, 0xFFFFu);
 }
 
 /* 8-to-7, LSB first */
@@ -206,6 +211,52 @@ static int ota_memeq(const uint8_t *a, const uint8_t *b, uint32_t n)
     return 1;
 }
 
+/* (felucca-bsp chip/ota.c, Felucca 1.8, MPL-2.0, Leo Kuroshita) flash.bin's boot area [0, 0x4000), which a writer other than Felucca's puts on the flash: a broken one is the
+ * failure only the USB_KEY dongle mends. It must be one the ROM boots: the flash header and the boot record at
+ * +0x20 (each ENC 0xFFFF, CRC16), the boot file at 0xA0 a single-bank BANKCB container (its 16-byte header and its
+ * payload each ciphered from their own start) loaded at 0x01C02000, the header's, the payload's and the record's
+ * CRCs right; a container that names its board (m-bootloader: "AC79BLID" + the board at payload +0x40) names the
+ * FM-1's. Any bootloader so made: M-VAVE's of every version, m-bootloader. 0 valid, -5 not, -4 read */
+static int ota_boot_valid(uint32_t fl_off, uint32_t fl_len, uint8_t *b)
+{
+    uint32_t i, n, k = 0xFFFFu, len, dcrc, pwant = 0, pcrc = 0, fcrc = 0;
+    if (fl_len < 0x4000u)
+        return -5;
+    if (ota_read(fl_off, b, 64))
+        return -4;
+    ota_jl_enc(b, 32);
+    ota_jl_enc(b + 32, 32);
+    if (ota_crc16(b + 2, 30, 0) != ota_rd16(b) || ota_crc16(b + 34, 30, 0) != ota_rd16(b + 32) ||
+        ota_rd32(b + 36) != 0xA0u || b[44] != 0u)
+        return -5;
+    dcrc = ota_rd16(b + 34);
+    len = ota_rd32(b + 40);
+    if (len < 16u + 0x50u || len > 0x4000u - 0xA0u)
+        return -5;
+    for (i = 0; i < len; i += n) {
+        uint32_t h = 0;
+        n = len - i > 512u ? 512u : len - i;
+        if (ota_read(fl_off + 0xA0u + i, b, n))
+            return -4;
+        if (!i) {                                           /* the container's header */
+            ota_jl_enc(b, 16);
+            if (ota_crc16(b, 14, 0) != ota_rd16(b + 14) || ota_rd16(b) != 1u || ota_rd16(b + 2) + 16u != len ||
+                ota_rd32(b + 4) != 0x01C02000u || ota_rd32(b + 8) != 16u)
+                return -5;
+            pwant = ota_rd16(b + 12);
+            fcrc = ota_crc16(b, 16, 0);
+            h = 16;
+        }
+        k = ota_jl_enc_k(b + h, n - h, k);
+        pcrc = ota_crc16(b + h, n - h, pcrc);
+        fcrc = ota_crc16(b + h, n - h, fcrc);
+        if (!i && ota_memeq(b + 16 + 0x40, (const uint8_t *)"AC79BLID", 8) &&
+            !ota_memeq(b + 16 + 0x48, (const uint8_t *)"fm1", 4))
+            return -5;                                      /* another board's */
+    }
+    return pcrc == pwant && fcrc == dcrc ? 0 : -5;
+}
+
 /* JLFS head "LOADER.BIN" in front of the staged loader (vm_update_defrag), written last */
 static int ota_stage_head(uint32_t len)
 {
@@ -254,31 +305,10 @@ static int ota_ufw(uint8_t *hdr, uint32_t *fl_off, uint32_t *fl_len, uint32_t *o
     return 0;
 }
 
-/* The flash head's isd_config.ini carries each unit's own chip key (written at the factory), so it and its entry
- * (its CRC) never equal a package's; the rest of the head (the SPL, the other entries) must. b, mine: the package's
- * and the device's first 512 bytes; the same isd_config.ini entry (0x40: offset, size) in both -> its data range */
-#define OTA_HEAD_UNIT(a, off, len) ((len) && (((a) >= 0x40u && (a) < 0x60u) || ((a) >= (off) && (a) < (off) + (len))))
-static int ota_isd_entry(const uint8_t *p, uint32_t *off, uint32_t *len)
-{
-    uint8_t e[32];
-    uint32_t i;
-    for (i = 0; i < 32u; i++)
-        e[i] = p[0x40 + i];
-    ota_jl_enc(e, 32);
-    *off = ota_rd32(e + 4);
-    *len = ota_rd32(e + 8);
-    return ota_memeq(e + 16, (const uint8_t *)"isd_config.ini", 15) && *off >= 0x60u && *len && *off + *len <= 0x4000u;
-}
-static int ota_isd_skip(const uint8_t *b, const uint8_t *mine, uint32_t *off, uint32_t *len)
-{
-    uint32_t o2, l2;
-    return ota_isd_entry(b, off, len) && ota_isd_entry(mine, &o2, &l2) && o2 == *off && l2 == *len;
-}
-
 static int ota_stage(void)                       /* steps 1..6; 0 = host said success */
 {
-    static uint8_t hdr[0x400], b[512], mine[512];
-    uint32_t i, n, ota_off, ota_len, fl_off, fl_len, c, len, own, official, isd_off = 0, isd_len = 0;
+    static uint8_t hdr[0x400], b[512];
+    uint32_t i, n, ota_off, ota_len, fl_off, fl_len, c, len, own, official;
     int rc;
     /* 1. UFW header + entry list */
     ota_show(1, 0);
@@ -300,17 +330,11 @@ static int ota_stage(void)                       /* steps 1..6; 0 = host said su
         own = ota_memeq(b + i, (const uint8_t *)"FELUCCA-LOADER-1", 16) && ota_rd32(b + 0x20 + 4) <= 0x14000u;
     if (!official && !own)
         return -7;
-    if (official) {                    /* the official loader writes the head: it must equal ours */
+    if (!own) {                        /* M-VAVE's writer puts flash.bin's boot area on the flash: it must be
+                                        * one the ROM boots on the FM-1 (any M-VAVE version: V15, V16) */
         ota_show(2, 0);
-        for (i = 0; i < 0x4000u; i += 512u) {
-            if (ota_read(fl_off + i, b, 512) || ota_fread(i, mine, 512))
-                return -4;
-            if (!i && !ota_isd_skip(b, mine, &isd_off, &isd_len))
-                isd_off = isd_len = 0;                      /* not the same layout: every byte must match */
-            for (n = 0; n < 512u; n++)
-                if (b[n] != mine[n] && !OTA_HEAD_UNIT(i + n, isd_off, isd_len))
-                    return -5;
-        }
+        if ((rc = ota_boot_valid(fl_off, fl_len, b)) != 0)
+            return rc;
     }
     /* 4. stage the package's loader: erase, body, verify, head last */
     ota_show(3, 0);

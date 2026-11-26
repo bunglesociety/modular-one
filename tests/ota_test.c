@@ -168,7 +168,7 @@ int main(int argc, char **argv)
     logical_len = n - 20;
 
     /* M-VAVE's own package against a real unit's flash (a backup): ota_test PACKAGE.fwsc DEVICE.bin EXPECTED
-     * (EXPECTED: 0 = commits, or the refusal code, e.g. -5); an optional 4th argument flips that head byte first */
+     * (EXPECTED: 0 = commits, or the refusal code, e.g. -5); an optional 4th argument flips that byte of the package's flash.bin first */
     if (argc >= 4) {
         FILE *d = fopen(argv[2], "rb");
         long want = strtol(argv[3], NULL, 10);
@@ -178,7 +178,7 @@ int main(int argc, char **argv)
         fclose(d);
         memset(nor + 0xE0000, 0xFF, 0x5000);
         if (argc >= 5)
-            nor[strtoul(argv[4], NULL, 0)] ^= 0x01;
+            logical[0x400u + strtoul(argv[4], NULL, 0)] ^= 0x01;
         rc = ota_session();
         printf("  %u requests, rc %d\n", requests, rc);
         bad += check("stock package vs this unit: the expected result", rc == want && (rc == 0) == (committed != 0));

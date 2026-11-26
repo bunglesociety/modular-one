@@ -558,7 +558,7 @@ const sayK = (k, arg = "") => { lastKey = k; lastArg = arg; $("status").textCont
 const log = (s) => { $("log").textContent += s + "\n"; };
 const bar = (f) => { $("bar").style.width = `${Math.max(0, Math.min(100, f))}%`; };
 let image = null;
-const meta = {"version": "0.4.2", "product": "FM-1_891", "family": "one", "name": "Modular One", "pkg": "../firmware/modular-one-0.4.2.fwsc"};
+const meta = {"version": "0.4.3", "product": "FM-1_891", "family": "one", "name": "Modular One", "pkg": "../firmware/modular-one-0.4.3.fwsc"};
 
 let writing = false;
 window.addEventListener("beforeunload", (e) => { if (writing) { e.preventDefault(); e.returnValue = t("leave"); } });
